@@ -1,0 +1,26 @@
+[package]
+name = "cloud-sol-treasury"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "cloud_sol_treasury"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = { version = "0.29.0", features = ["init-if-needed"] }
+anchor-spl = "0.29.0"
+solana-program = "1.18.10"
+num-bigint = "0.4.4"
+chainlink_solana = "1.0.0"
+
+[dev-dependencies]
+solana-program-test = "1.18.10"
