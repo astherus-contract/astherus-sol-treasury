@@ -18,7 +18,7 @@ pub fn deposit_sol(ctx: Context<DepositSol>, amount: u64) -> Result<()> {
     let admin = &ctx.accounts.admin.load()?;
     let bank = &ctx.accounts.bank.load()?;
 
-    if !bank.enabled || !admin.global_withdraw_enabled {
+    if !bank.enabled {
         return Err(ErrorCode::DepositAndWithdrawalDisabled.into());
     }
     require!(amount > 0, ErrorCode::ZeroAmount);
@@ -47,7 +47,7 @@ pub fn deposit_sol(ctx: Context<DepositSol>, amount: u64) -> Result<()> {
 pub fn deposit_spl(ctx: Context<DepositSpl>, amount: u64) -> Result<()> {
     let admin = &ctx.accounts.admin.load()?;
     let bank = &ctx.accounts.bank.load()?;
-    if !bank.enabled || !admin.global_withdraw_enabled {
+    if !bank.enabled {
         return Err(ErrorCode::DepositAndWithdrawalDisabled.into());
     }
 
