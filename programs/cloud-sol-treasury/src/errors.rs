@@ -24,4 +24,7 @@ pub enum ErrorCode {
     InvalidSignature,
     #[msg("Signature verification failed.")]
     SigVerificationFailed,
+    #[msg("Invalid priceDecimals.")]
+    InvalidPriceDecimals,
+
 }

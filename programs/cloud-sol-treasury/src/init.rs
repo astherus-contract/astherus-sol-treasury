@@ -25,7 +25,8 @@ pub fn initialize(ctx: Context<Initialize>, global_withdraw_enabled: bool, hourl
         authority : *ctx.accounts.signer.key,
         operator : operator,
         counter_party : counter_party,
-        truth_holder : truth_holder
+        truth_holder : truth_holder,
+        price_feed_program:price_feed_program
     });
 
     Ok(())
@@ -95,8 +96,23 @@ pub fn change_truth_holder(ctx: Context<UpdateAdmin>, truth_holder: Pubkey) -> R
     Ok(())
 }
 
+pub fn change_price_feed_program(ctx: Context<UpdateAdmin>, price_feed_program: Pubkey) -> Result<()> {
+    let admin = &mut ctx.accounts.admin.load_mut()?;
+    let old_price_feed_program = admin.price_feed_program;
+    admin.price_feed_program = price_feed_program;
+
+    emit!(ChangePriceFeedProgramEvent{
+        old_price_feed_program : old_price_feed_program,
+        new_price_feed_program:price_feed_program
+    });
+
+    Ok(())
+}
+
+
 #[derive(Accounts)]
 pub struct Initialize<'info> {
+    //#[account(mut, address = crate::ID)]
     #[account(mut)]
     pub signer: Signer<'info>,
     #[account(init, payer = signer, space = 8 + std::mem::size_of::< Admin > (), seeds = [constants::ADMIN.as_bytes()], bump)]
@@ -137,6 +153,7 @@ pub struct Admin {
 #[derive(Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct Bank {
+    //8+32+32+32+1+1+1+(8+8)*600+32+8+1+1+1=9750<10240
     pub authority: Pubkey,
     pub token_mint: Pubkey,
     pub token_vault_authority: Pubkey,

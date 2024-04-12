@@ -9,6 +9,7 @@ pub struct InitializeEvent {
     pub operator: Pubkey,
     pub counter_party: Pubkey,
     pub truth_holder: Pubkey,
+    pub price_feed_program: Pubkey,
 }
 
 #[event]
@@ -33,6 +34,12 @@ pub struct ChangeCounterPartyEvent {
 pub struct ChangeTruthHolderEvent {
     pub old_truth_holder: Pubkey,
     pub new_truth_holder: Pubkey,
+}
+
+#[event]
+pub struct ChangePriceFeedProgramEvent {
+    pub old_price_feed_program: Pubkey,
+    pub new_price_feed_program: Pubkey,
 }
 
 #[event]

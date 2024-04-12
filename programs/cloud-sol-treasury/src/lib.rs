@@ -44,6 +44,10 @@ pub mod cloud_sol_treasury {
         return init::change_truth_holder(ctx, truth_holder);
     }
 
+    pub fn change_price_feed_program(ctx: Context<UpdateAdmin>, price_feed_program: Pubkey) -> Result<()> {
+        return init::change_price_feed_program(ctx, price_feed_program);
+    }
+
     pub fn add_token(ctx: Context<AddToken>, enabled: bool, token_vault_authority_bump: u8, sol_vault_bump: u8, price: u64, fixed_price: bool, price_decimals: u8, token_decimals: u8) -> Result<()> {
         return token::add_token(ctx, enabled, token_vault_authority_bump, sol_vault_bump, price, fixed_price, price_decimals, token_decimals);
     }

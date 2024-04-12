@@ -5,6 +5,8 @@ use anchor_spl::{
         Mint, Token, TokenAccount,
     },
 };
+use chainlink_solana as chainlink;
+use crate::errors::ErrorCode;
 
 use crate::events::*;
 use crate::init::*;
@@ -23,6 +25,14 @@ pub fn add_token(ctx: Context<AddToken>, enabled: bool, token_vault_authority_bu
     bank.price_decimals = price_decimals;
     bank.token_decimals = token_decimals;
     bank.price_feed = *ctx.accounts.price_feed.key;
+
+    if !fixed_price {
+        let decimals = chainlink::decimals(
+            ctx.accounts.price_feed_program.to_account_info(),
+            ctx.accounts.price_feed.to_account_info(),
+        ).unwrap();
+        require!(decimals == price_decimals, ErrorCode::InvalidPriceDecimals);
+    }
 
     emit!(AddTokenEvent{
         token_mint: bank.token_mint,
@@ -51,6 +61,8 @@ pub fn update_token_enabled(ctx: Context<UpdateTokenEnabled>, enabled: bool) -> 
 pub struct AddToken<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
+    #[account(constraint = admin.load() ?.authority == * signer.key)]
+    pub admin: AccountLoader<'info, Admin>,
     #[account(init, payer = signer, space = 8 + std::mem::size_of::< Bank > ())]
     pub bank: AccountLoader<'info, Bank>,
     #[account(init, payer = signer, space = 8, seeds = [constants::SOL_VAULT.as_bytes(), bank.key().as_ref()], bump)]

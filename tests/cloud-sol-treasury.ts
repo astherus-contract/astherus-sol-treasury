@@ -5,6 +5,8 @@ import {CloudSolTreasury} from "../target/types/cloud_sol_treasury";
 const createKeccakHash = require('keccak')
 import * as ed from '@noble/ed25519';
 import * as assert from 'assert';
+import sleep from 'await-sleep'
+
 
 
 import {
@@ -20,12 +22,15 @@ import {PublicKey, TokenAccountsFilter, ComputeBudgetProgram, Transaction, Ed255
 
 describe("cloud-sol-treasury", () => {
     // Configure the client to use the local cluster.
-    anchor.setProvider(anchor.AnchorProvider.env());
-    const provider = anchor.getProvider();
+    const provider = anchor.AnchorProvider.env();
+    anchor.setProvider(provider);
+    //const programWallet = provider.wallet as anchor.Wallet.payer;
+
     const program = anchor.workspace.CloudSolTreasury as Program<CloudSolTreasury>;
 
     const bankKeypair = anchor.web3.Keypair.generate();
     const walletKeypair = anchor.web3.Keypair.generate();
+    //const walletKeypair = programWallet;
     const counterPartyKeypair = anchor.web3.Keypair.generate();
     const operatorKeypair = anchor.web3.Keypair.generate();
 
@@ -132,6 +137,7 @@ describe("cloud-sol-treasury", () => {
         const tx = await program.methods.addToken(true, token_vault_authority_bump, sol_vault_bump,new anchor.BN(1e6),true,0,new anchor.BN(6))
             .accounts({
                 signer: walletKeypair.publicKey,
+                admin: admin,
                 bank: bankKeypair.publicKey,
                 solVault: solVault,
                 tokenVaultAuthority: tokenVaultAuthority,
@@ -181,7 +187,7 @@ describe("cloud-sol-treasury", () => {
         console.log("solVault AccountInfo", solVault, await provider.connection.getAccountInfo(solVault));
 
 
-        const withdraw_sol_tx = await program.methods.withdrawSol(amount, new anchor.BN(Date.now() + 1000 * 10), new anchor.BN(Date.now()))
+        const withdraw_sol_tx = await program.methods.withdrawSol(amount, new anchor.BN(Date.now() + 10*1000), new anchor.BN(Date.now()))
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
@@ -264,8 +270,23 @@ describe("cloud-sol-treasury", () => {
 
         console.log("Your transaction signature", tx);
 
+    });
+
+    it("Is changePriceFeedProgram!", async () => {
+        const tx = await program.methods.changePriceFeedProgram(priceFeedProgram)
+            .accounts({
+                signer: walletKeypair.publicKey,
+                admin: admin,
+                systemProgram: anchor.web3.SystemProgram.programId,
+            }).signers([walletKeypair]).rpc();
+
+        console.log("Your transaction signature", tx);
+
         // let result = await program.account.admin.fetch(adminKeypair.publicKey);
         // console.log(result);
+
+        // let result = await program.account.admin.all();
+        // console.log("program.account.admin.all",result);
     });
 
     it("Deposits SPL Token", async () => {
@@ -290,7 +311,7 @@ describe("cloud-sol-treasury", () => {
     });
 
     it("Withdraws SPL Token", async () => {
-        let withdraw_spl_tx = await program.methods.withdrawSpl(new anchor.BN(1e6), new anchor.BN(Date.now() + 1000 * 10), new anchor.BN(Date.now())).accounts({
+        let withdraw_spl_tx = await program.methods.withdrawSpl(new anchor.BN(1e6), new anchor.BN(Date.now() + 10*1000), new anchor.BN(Date.now())).accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             bank: bankKeypair.publicKey,
@@ -309,8 +330,8 @@ describe("cloud-sol-treasury", () => {
 
     it("Withdraws SPL Token BY signature", async () => {
         let now = Date.now();
-        let idempotent = new anchor.BN(now);
-        let deadLine = new anchor.BN(Date.now() + 1000 * 10);
+        let idempotent = new anchor.BN(now/1000);
+        let deadLine = new anchor.BN((Date.now()/1000 + 10));
         let amount = new anchor.BN(1e6);
 
         //const msg = Buffer.from("hello")
@@ -361,7 +382,7 @@ describe("cloud-sol-treasury", () => {
             publicKey: publicKey,
             message: messageHashUint8Array,
             signature: signatureUint8Array,
-        })).signers([walletKeypair]).rpc().catch(e => console.error(e))
+        })).signers([walletKeypair]).rpc();
         //.catch(e => console.error(e))
     });
 
@@ -381,7 +402,7 @@ describe("cloud-sol-treasury", () => {
                 systemProgram: anchor.web3.SystemProgram.programId,
             }).signers([operatorKeypair]).rpc({
                 skipPreflight: true
-            }).catch(e => console.error(e));
+            });
 
         let userKeypair_balance = await provider.connection.getBalance(userKeypair.publicKey);
         console.log("userKeypair_balance", userKeypair_balance);
@@ -402,7 +423,7 @@ describe("cloud-sol-treasury", () => {
             systemProgram: anchor.web3.SystemProgram.programId,
         }).signers([operatorKeypair]).rpc({
             skipPreflight: true
-        }).catch(e => console.error(e));
+        });
 
         //console.log(withdraw_spl_tx);
 
@@ -424,5 +445,8 @@ describe("cloud-sol-treasury", () => {
 
 
     });
+
+    console.log("字节 ",8+32+32+32+1+1+1+(8+8)*600+32+8+1+1+1,"10k=",10*1024)
+
 
 });
