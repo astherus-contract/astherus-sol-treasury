@@ -23,13 +23,12 @@ use chainlink_solana as chainlink;
 
 pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64, dead_line: u64, idempotent: u64) -> Result<()> {
     let admin = &ctx.accounts.admin.load()?;
-    let bank = &ctx.accounts.bank.load()?;
     let sol_vault = &mut ctx.accounts.sol_vault;
     let current_timestamp = Clock::get()?.unix_timestamp as u64;
     require!(current_timestamp < dead_line, ErrorCode::AlreadyPassedDeadline);
 
 
-    if !bank.enabled || !admin.global_withdraw_enabled {
+    if !admin.global_withdraw_enabled {
         return Err(ErrorCode::DepositAndWithdrawalDisabled.into());
     }
 
@@ -76,7 +75,6 @@ pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64, dead_line: u64, idem
 }
 
 pub fn withdraw_sol_to_counter_party(ctx: Context<WithdrawSolToCounterParty>, amount: u64) -> Result<()> {
-    let bank = &ctx.accounts.bank;
     let sol_vault = &mut ctx.accounts.sol_vault;
 
     require!(amount > 0, ErrorCode::ZeroAmount);
@@ -344,9 +342,7 @@ pub struct WithdrawSol<'info> {
     pub signer: Signer<'info>,
     #[account(mut, constraint = admin.load() ?.authority == * signer.key)]
     pub admin: AccountLoader<'info, Admin>,
-    #[account(constraint = bank.load() ?.authority == * signer.key)]
-    pub bank: AccountLoader<'info, Bank>,
-    #[account(mut, seeds = [constants::SOL_VAULT.as_bytes(), bank.key().as_ref()], bump = bank.load() ?.sol_vault_bump)]
+    #[account(mut, seeds = [constants::SOL_VAULT.as_bytes()], bump = admin.load() ?.sol_vault_bump)]
     pub sol_vault: Account<'info, Empty>,
     /// CHECK:
     #[account(mut)]
@@ -360,9 +356,7 @@ pub struct WithdrawSolToCounterParty<'info> {
     pub signer: Signer<'info>,
     #[account(mut, constraint = admin.load() ?.operator == * signer.key)]
     pub admin: AccountLoader<'info, Admin>,
-    #[account()]
-    pub bank: AccountLoader<'info, Bank>,
-    #[account(mut, seeds = [constants::SOL_VAULT.as_bytes(), bank.key().as_ref()], bump = bank.load() ?.sol_vault_bump)]
+    #[account(mut, seeds = [constants::SOL_VAULT.as_bytes()], bump = admin.load() ?.sol_vault_bump)]
     pub sol_vault: Account<'info, Empty>,
     /// CHECK:
     #[account(mut, constraint = admin.load() ?.counter_party == * receiver.key)]

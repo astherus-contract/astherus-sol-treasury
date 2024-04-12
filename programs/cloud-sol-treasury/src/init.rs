@@ -5,7 +5,7 @@ use crate::events::*;
 use crate::constants;
 
 
-pub fn initialize(ctx: Context<Initialize>, global_withdraw_enabled: bool, hourly_limit: u64,
+pub fn initialize(ctx: Context<Initialize>, global_withdraw_enabled: bool,sol_vault_bump: u8, hourly_limit: u64,
                   operator: Pubkey, counter_party: Pubkey, truth_holder: Pubkey, price_feed_program: Pubkey) -> Result<()> {
     let admin = &mut ctx.accounts.admin.load_init()?;
     require!(!admin.init, ErrorCode::AlreadyInitialized);
@@ -17,7 +17,7 @@ pub fn initialize(ctx: Context<Initialize>, global_withdraw_enabled: bool, hourl
     admin.counter_party = counter_party;
     admin.truth_holder = truth_holder;
     admin.price_feed_program = price_feed_program;
-
+    admin.sol_vault_bump = sol_vault_bump;
     emit!(InitializeEvent{
         init : true,
         global_withdraw_enabled : global_withdraw_enabled,
@@ -117,6 +117,8 @@ pub struct Initialize<'info> {
     pub signer: Signer<'info>,
     #[account(init, payer = signer, space = 8 + std::mem::size_of::< Admin > (), seeds = [constants::ADMIN.as_bytes()], bump)]
     pub admin: AccountLoader<'info, Admin>,
+    #[account(init, payer = signer, space = 8, seeds = [constants::SOL_VAULT.as_bytes()], bump)]
+    pub sol_vault: Account<'info, Empty>,
     pub system_program: Program<'info, System>,
 }
 
@@ -138,6 +140,7 @@ pub struct Empty {}
 #[repr(C)]
 pub struct Admin {
     pub authority: Pubkey,
+    pub sol_vault_bump: u8,
     pub global_withdraw_enabled: bool,
     pub hourly_limit: u64,
     pub init: bool,
@@ -158,7 +161,6 @@ pub struct Bank {
     pub token_mint: Pubkey,
     pub token_vault_authority: Pubkey,
     pub token_vault_authority_bump: u8,
-    pub sol_vault_bump: u8,
     pub enabled: bool,
     pub claim_history: [ClaimHistoryItem; 600],
     pub price_feed: Pubkey,
@@ -183,7 +185,7 @@ impl Bank {
 
     pub fn add_claim_history_item(&mut self, idempotent: u64, dead_line: u64, current_timestamp: u64) -> bool {
         for item in self.claim_history.iter_mut() {
-            if item.dead_line <= current_timestamp {
+            if item.dead_line <= (current_timestamp + 120) {
                 item.dead_line = dead_line;
                 item.idempotent = idempotent;
                 return true;

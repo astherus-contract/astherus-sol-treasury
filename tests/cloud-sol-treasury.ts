@@ -54,9 +54,14 @@ describe("cloud-sol-treasury", () => {
         ],
         program.programId);
 
+    // const [solVault, sol_vault_bump] = anchor.web3.PublicKey.findProgramAddressSync(
+    //     [anchor.utils.bytes.utf8.encode("sol_vault"),
+    //         bankKeypair.publicKey.toBuffer()
+    //     ],
+    //     program.programId);
+
     const [solVault, sol_vault_bump] = anchor.web3.PublicKey.findProgramAddressSync(
-        [anchor.utils.bytes.utf8.encode("sol_vault"),
-            bankKeypair.publicKey.toBuffer()
+        [anchor.utils.bytes.utf8.encode("sol_vault")
         ],
         program.programId);
 
@@ -118,10 +123,11 @@ describe("cloud-sol-treasury", () => {
     });
 
     it("Is initialized!", async () => {
-        const tx = await program.methods.initialize(true, new anchor.BN(1000), walletKeypair.publicKey, walletKeypair.publicKey, walletKeypair.publicKey,priceFeedProgram)
+        const tx = await program.methods.initialize(true,sol_vault_bump, new anchor.BN(1000), walletKeypair.publicKey, walletKeypair.publicKey, walletKeypair.publicKey,priceFeedProgram)
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
+                solVault: solVault,
                 systemProgram: anchor.web3.SystemProgram.programId,
             }).signers([walletKeypair]).rpc();
 
@@ -134,12 +140,11 @@ describe("cloud-sol-treasury", () => {
     });
 
     it("Is createdBank!", async () => {
-        const tx = await program.methods.addToken(true, token_vault_authority_bump, sol_vault_bump,new anchor.BN(1e6),true,0,new anchor.BN(6))
+        const tx = await program.methods.addToken(true, token_vault_authority_bump,new anchor.BN(1e6),true,0,new anchor.BN(6))
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
                 bank: bankKeypair.publicKey,
-                solVault: solVault,
                 tokenVaultAuthority: tokenVaultAuthority,
                 tokenVault: tokenVault,
                 tokenMint: mint.publicKey,
@@ -152,8 +157,8 @@ describe("cloud-sol-treasury", () => {
 
         //console.log("Your transaction signature", tx);
 
-        let result = await program.account.bank.fetch(bankKeypair.publicKey);
-        //console.log(result);
+        // let result = await program.account.bank.fetch(bankKeypair.publicKey);
+        // //console.log(result);
     });
 
     it("Deposits SOL", async () => {
@@ -167,7 +172,7 @@ describe("cloud-sol-treasury", () => {
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
-                bank: bankKeypair.publicKey,
+                // bank: bankKeypair.publicKey,
                 solVault: solVault,
                 systemProgram: anchor.web3.SystemProgram.programId,
             }).signers([walletKeypair]).rpc();
@@ -191,7 +196,7 @@ describe("cloud-sol-treasury", () => {
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
-                bank: bankKeypair.publicKey,
+                // bank: bankKeypair.publicKey,
                 solVault: solVault,
                 receiver: userKeypair.publicKey,
                 systemProgram: anchor.web3.SystemProgram.programId,
@@ -396,7 +401,7 @@ describe("cloud-sol-treasury", () => {
             .accounts({
                 signer: operatorKeypair.publicKey,
                 admin: admin,
-                bank: bankKeypair.publicKey,
+                // bank: bankKeypair.publicKey,
                 solVault: solVault,
                 receiver: counterPartyKeypair.publicKey,
                 systemProgram: anchor.web3.SystemProgram.programId,

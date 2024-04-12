@@ -16,11 +16,11 @@ pub fn deposit_sol(ctx: Context<DepositSol>, amount: u64) -> Result<()> {
     let signer = &ctx.accounts.signer;
     let sys_program = &ctx.accounts.system_program;
     let admin = &ctx.accounts.admin.load()?;
-    let bank = &ctx.accounts.bank.load()?;
-
-    if !bank.enabled {
-        return Err(ErrorCode::DepositAndWithdrawalDisabled.into());
-    }
+    // let bank = &ctx.accounts.bank.load()?;
+    //
+    // if !bank.enabled {
+    //     return Err(ErrorCode::DepositAndWithdrawalDisabled.into());
+    // }
     require!(amount > 0, ErrorCode::ZeroAmount);
     require!(signer.lamports() >= amount, ErrorCode::InsufficientUserBalance);
 
@@ -82,9 +82,7 @@ pub struct DepositSol<'info> {
     pub signer: Signer<'info>,
     #[account()]
     pub admin: AccountLoader<'info, Admin>,
-    #[account()]
-    pub bank: AccountLoader<'info, Bank>,
-    #[account(mut, seeds = [constants::SOL_VAULT.as_bytes(), bank.key().as_ref()], bump = bank.load()?.sol_vault_bump)]
+    #[account(mut, seeds = [constants::SOL_VAULT.as_bytes()], bump = admin.load()?.sol_vault_bump)]
     pub sol_vault: Account<'info, Empty>,
     pub system_program: Program<'info, System>,
 }

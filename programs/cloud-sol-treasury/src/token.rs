@@ -12,13 +12,12 @@ use crate::events::*;
 use crate::init::*;
 use crate::constants;
 
-pub fn add_token(ctx: Context<AddToken>, enabled: bool, token_vault_authority_bump: u8, sol_vault_bump: u8,price: u64, fixed_price: bool, price_decimals: u8, token_decimals: u8) -> Result<()> {
+pub fn add_token(ctx: Context<AddToken>, enabled: bool, token_vault_authority_bump: u8,price: u64, fixed_price: bool, price_decimals: u8, token_decimals: u8) -> Result<()> {
     let bank = &mut ctx.accounts.bank.load_init()?;
     bank.authority = *ctx.accounts.signer.key;
     bank.token_mint = *ctx.accounts.token_mint.to_account_info().key;
     bank.token_vault_authority = *ctx.accounts.token_vault_authority.key;
     bank.token_vault_authority_bump = token_vault_authority_bump;
-    bank.sol_vault_bump = sol_vault_bump;
     bank.enabled = enabled;
     bank.price = price;
     bank.fixed_price = fixed_price;
@@ -65,8 +64,6 @@ pub struct AddToken<'info> {
     pub admin: AccountLoader<'info, Admin>,
     #[account(init, payer = signer, space = 8 + std::mem::size_of::< Bank > ())]
     pub bank: AccountLoader<'info, Bank>,
-    #[account(init, payer = signer, space = 8, seeds = [constants::SOL_VAULT.as_bytes(), bank.key().as_ref()], bump)]
-    pub sol_vault: Account<'info, Empty>,
     /// CHECK:
     #[account(seeds = [constants::TOKEN_VAULT_AUTHORITY.as_bytes(), bank.key().as_ref()], bump)]
     pub token_vault_authority: UncheckedAccount<'info>,
