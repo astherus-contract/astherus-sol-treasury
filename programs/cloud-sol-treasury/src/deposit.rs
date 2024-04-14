@@ -6,21 +6,25 @@ use anchor_spl::{
     },
 };
 
-use crate::init::{Bank, Admin, Empty};
+use crate::init::{Bank, Admin};
 use crate::errors::ErrorCode;
 use crate::events::*;
 use crate::constants;
+use crate::sol::SolVault;
 
 
 pub fn deposit_sol(ctx: Context<DepositSol>, amount: u64) -> Result<()> {
     let signer = &ctx.accounts.signer;
     let sys_program = &ctx.accounts.system_program;
-    let admin = &ctx.accounts.admin.load()?;
-    // let bank = &ctx.accounts.bank.load()?;
-    //
-    // if !bank.enabled {
-    //     return Err(ErrorCode::DepositAndWithdrawalDisabled.into());
-    // }
+
+    {
+        let sol_vault = &ctx.accounts.sol_vault.load()?;
+
+        if !sol_vault.enabled {
+            return Err(ErrorCode::DepositAndWithdrawalDisabled.into());
+        }
+    }
+
     require!(amount > 0, ErrorCode::ZeroAmount);
     require!(signer.lamports() >= amount, ErrorCode::InsufficientUserBalance);
 
@@ -45,7 +49,6 @@ pub fn deposit_sol(ctx: Context<DepositSol>, amount: u64) -> Result<()> {
 }
 
 pub fn deposit_spl(ctx: Context<DepositSpl>, amount: u64) -> Result<()> {
-    let admin = &ctx.accounts.admin.load()?;
     let bank = &ctx.accounts.bank.load()?;
     if !bank.enabled {
         return Err(ErrorCode::DepositAndWithdrawalDisabled.into());
@@ -82,8 +85,8 @@ pub struct DepositSol<'info> {
     pub signer: Signer<'info>,
     #[account()]
     pub admin: AccountLoader<'info, Admin>,
-    #[account(mut, seeds = [constants::SOL_VAULT.as_bytes()], bump = admin.load()?.sol_vault_bump)]
-    pub sol_vault: Account<'info, Empty>,
+    #[account(mut, seeds = [constants::SOL_VAULT.as_bytes(),admin.key().as_ref()], bump = admin.load() ?.sol_vault_bump)]
+    pub sol_vault: AccountLoader<'info, SolVault>,
     pub system_program: Program<'info, System>,
 }
 
@@ -98,7 +101,7 @@ pub struct DepositSpl<'info> {
     pub bank: AccountLoader<'info, Bank>,
 
     /// CHECK
-    #[account(seeds = [constants::TOKEN_VAULT_AUTHORITY.as_bytes(), bank.key().as_ref()], bump = bank.load()?.token_vault_authority_bump)]
+    #[account(seeds = [constants::TOKEN_VAULT_AUTHORITY.as_bytes(), bank.key().as_ref()], bump = bank.load() ?.token_vault_authority_bump)]
     pub token_vault_authority: UncheckedAccount<'info>,
 
     #[account(mut, associated_token::mint = token_mint, associated_token::authority = token_vault_authority,)]

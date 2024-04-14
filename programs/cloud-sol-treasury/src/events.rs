@@ -63,11 +63,17 @@ pub struct UpdateTokenEnabledEvent {
     pub new_enabled: bool,
 }
 
+#[event]
+pub struct AddSolEvent {
+    pub sol_vault: Pubkey,
+    pub admin: Pubkey,
+}
+
 
 #[event]
-pub struct RemoveTokenEvent {
-    pub token_mint: Pubkey,
-    pub bank: Pubkey,
+pub struct UpdateSolEnabledEvent {
+    pub old_enabled: bool,
+    pub new_enabled: bool,
 }
 
 #[event]
@@ -94,6 +100,7 @@ pub struct WithdrawSolEvent {
     pub to: Pubkey,
     pub signer: Pubkey,
     pub amount: u64,
+    pub idempotent: u64,
 }
 
 #[event]
@@ -127,9 +134,7 @@ pub struct TransferSplToCounterPartyEvent {
 
 #[event]
 pub struct ClaimPausedEvent {
-    pub token_mint: Pubkey,
-    pub bank: Pubkey,
-    pub sender: Pubkey,
+    pub idempotent: u64,
     pub to: Pubkey,
     pub signer: Pubkey,
     pub amount: u64,

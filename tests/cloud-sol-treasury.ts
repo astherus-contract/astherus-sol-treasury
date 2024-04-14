@@ -8,7 +8,6 @@ import * as assert from 'assert';
 import sleep from 'await-sleep'
 
 
-
 import {
     ASSOCIATED_TOKEN_PROGRAM_ID,
     createMint,
@@ -61,7 +60,7 @@ describe("cloud-sol-treasury", () => {
     //     program.programId);
 
     const [solVault, sol_vault_bump] = anchor.web3.PublicKey.findProgramAddressSync(
-        [anchor.utils.bytes.utf8.encode("sol_vault")
+        [anchor.utils.bytes.utf8.encode("sol_vault"),admin.toBuffer()
         ],
         program.programId);
 
@@ -123,11 +122,10 @@ describe("cloud-sol-treasury", () => {
     });
 
     it("Is initialized!", async () => {
-        const tx = await program.methods.initialize(true,sol_vault_bump, new anchor.BN(1000), walletKeypair.publicKey, walletKeypair.publicKey, walletKeypair.publicKey,priceFeedProgram)
+        const tx = await program.methods.initialize(true, new anchor.BN(100e12), walletKeypair.publicKey, walletKeypair.publicKey, walletKeypair.publicKey, priceFeedProgram)
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
-                solVault: solVault,
                 systemProgram: anchor.web3.SystemProgram.programId,
             }).signers([walletKeypair]).rpc();
 
@@ -139,8 +137,25 @@ describe("cloud-sol-treasury", () => {
         // console.log(result);
     });
 
+    it("Is createdSol!", async () => {
+        const tx = await program.methods.addSol(true, sol_vault_bump, new anchor.BN(1e6), true, new anchor.BN(6), new anchor.BN(6))
+            .accounts({
+                signer: walletKeypair.publicKey,
+                admin: admin,
+                solVault: solVault,
+                priceFeed: priceFeed,
+                priceFeedProgram: priceFeedProgram,
+                systemProgram: anchor.web3.SystemProgram.programId,
+            }).signers([walletKeypair]).rpc();
+
+        //console.log("Your transaction signature", tx);
+
+        // let result = await program.account.bank.fetch(bankKeypair.publicKey);
+        // //console.log(result);
+    });
+
     it("Is createdBank!", async () => {
-        const tx = await program.methods.addToken(true, token_vault_authority_bump,new anchor.BN(1e6),true,0,new anchor.BN(6))
+        const tx = await program.methods.addToken(true, token_vault_authority_bump, new anchor.BN(1e6), true, new anchor.BN(6), new anchor.BN(6))
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
@@ -172,10 +187,9 @@ describe("cloud-sol-treasury", () => {
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
-                // bank: bankKeypair.publicKey,
                 solVault: solVault,
                 systemProgram: anchor.web3.SystemProgram.programId,
-            }).signers([walletKeypair]).rpc();
+            }).signers([walletKeypair]).rpc().catch(e => console.error(e))
         console.log(deposit_sol_tx);
 
         let sol_vault_balance = await provider.connection.getBalance(solVault);
@@ -192,20 +206,25 @@ describe("cloud-sol-treasury", () => {
         console.log("solVault AccountInfo", solVault, await provider.connection.getAccountInfo(solVault));
 
 
-        const withdraw_sol_tx = await program.methods.withdrawSol(amount, new anchor.BN(Date.now() + 10*1000), new anchor.BN(Date.now()))
+        const withdraw_sol_tx = await program.methods.withdrawSol(amount, new anchor.BN(Date.now() + 10 * 1000), new anchor.BN(Date.now()))
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
                 // bank: bankKeypair.publicKey,
                 solVault: solVault,
                 receiver: userKeypair.publicKey,
+                priceFeed: priceFeed,
+                priceFeedProgram: priceFeedProgram,
                 systemProgram: anchor.web3.SystemProgram.programId,
             }).signers([walletKeypair]).rpc({
                 skipPreflight: true
-            });
+            })
 
-        let userKeypair_balance = await provider.connection.getBalance(userKeypair.publicKey);
-        console.log("userKeypair_balance", userKeypair_balance);
+        // let userKeypair_balance = await provider.connection.getBalance(userKeypair.publicKey);
+        // console.log("userKeypair_balance", userKeypair_balance);
+
+        console.log("solVault AccountInfo", solVault, await provider.connection.getAccountInfo(solVault));
+
 
     });
 
@@ -224,7 +243,7 @@ describe("cloud-sol-treasury", () => {
     });
 
     it("Is updateHourlyLimit!", async () => {
-        const tx = await program.methods.updateHourlyLimit(new anchor.BN(1000000))
+        const tx = await program.methods.updateHourlyLimit(new anchor.BN(1000000000e6))
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
@@ -295,6 +314,8 @@ describe("cloud-sol-treasury", () => {
     });
 
     it("Deposits SPL Token", async () => {
+        console.log("userToken getTokenAccountBalance", userToken, await provider.connection.getTokenAccountBalance(userToken));
+
         let deposit_spl_tx = await program.methods.depositSpl(new anchor.BN(25e6)).accounts(
             {
                 signer: walletKeypair.publicKey,
@@ -310,34 +331,44 @@ describe("cloud-sol-treasury", () => {
 
             }
         ).signers([walletKeypair]).rpc();
+        console.log("userToken getTokenAccountBalance", userToken, await provider.connection.getTokenAccountBalance(userToken));
 
         //console.log(deposit_spl_tx);
 
     });
 
     it("Withdraws SPL Token", async () => {
-        let withdraw_spl_tx = await program.methods.withdrawSpl(new anchor.BN(1e6), new anchor.BN(Date.now() + 10*1000), new anchor.BN(Date.now())).accounts({
+        //console.log("userToken getTokenAccountBalance", userToken, await provider.connection.getTokenAccountBalance(userToken));
+
+        let withdraw_spl_tx = await program.methods.withdrawSpl(new anchor.BN(1e6), new anchor.BN(Date.now() + 10 * 1000), new anchor.BN(Date.now())).accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             bank: bankKeypair.publicKey,
             tokenVaultAuthority: tokenVaultAuthority,
             tokenVault: tokenVault,
             receiver: userToken,
+            priceFeed: priceFeed,
+            priceFeedProgram: priceFeedProgram,
             tokenMint: mint.publicKey,
             associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
             tokenProgram: TOKEN_PROGRAM_ID,
             systemProgram: anchor.web3.SystemProgram.programId,
         }).signers([walletKeypair]).rpc();
+        //console.log("userToken getTokenAccountBalance", userToken, await provider.connection.getTokenAccountBalance(userToken));
 
         //console.log(withdraw_spl_tx);
 
     });
 
     it("Withdraws SPL Token BY signature", async () => {
+
+        console.log("userToken getTokenAccountBalance", userToken, await provider.connection.getTokenAccountBalance(userToken));
+
+
         let now = Date.now();
-        let idempotent = new anchor.BN(now/1000);
-        let deadLine = new anchor.BN((Date.now()/1000 + 10));
-        let amount = new anchor.BN(1e6);
+        let idempotent = new anchor.BN(now / 1000);
+        let deadLine = new anchor.BN((Date.now() / 1000 + 10));
+        let amount = new anchor.BN(10e6);
 
         //const msg = Buffer.from("hello")
         const msg = Buffer.concat([
@@ -387,8 +418,67 @@ describe("cloud-sol-treasury", () => {
             publicKey: publicKey,
             message: messageHashUint8Array,
             signature: signatureUint8Array,
-        })).signers([walletKeypair]).rpc();
-        //.catch(e => console.error(e))
+        })).signers([walletKeypair]).rpc()
+        // .catch(e => console.error(e))
+
+        console.log("userToken getTokenAccountBalance", userToken, await provider.connection.getTokenAccountBalance(userToken));
+
+    });
+
+    it("Withdraws SOl BY signature", async () => {
+
+        console.log("receiver Withdraws SOl BY signature", userToken, await provider.connection.getBalance(userKeypair.publicKey));
+
+        let now = Date.now();
+        let idempotent = new anchor.BN(now / 1000);
+        let deadLine = new anchor.BN((Date.now() / 1000 + 10));
+        let amount = new anchor.BN(10e6);
+
+        //const msg = Buffer.from("hello")
+        const msg = Buffer.concat([
+            Buffer.from(idempotent.toString()),
+            Buffer.from(deadLine.toString()),
+            Buffer.from(amount.toString()),
+            admin.toBytes(),
+            solVault.toBytes(),
+            userKeypair.publicKey.toBytes(),
+            priceFeed.toBytes(),
+            priceFeedProgram.toBytes(),
+        ])
+
+        let messageHash = createKeccakHash('keccak256').update(msg).digest('hex')
+        //console.log("messageHash", messageHash)
+        let messageHashUint8Array = Buffer.from(messageHash, 'hex').valueOf()
+
+        const publicKey = new PublicKey(walletKeypair.publicKey.toBase58()).toBytes();
+        const privateKey = walletKeypair.secretKey;
+        //console.log("publicKey", Buffer.from(publicKey).toString('hex'))
+
+        const signatureUint8Array = await ed.sign(messageHashUint8Array, privateKey.slice(0, 32));
+        let signature = Buffer.from(signatureUint8Array).toString("hex");
+        //console.log("signature", signature)
+        const isValid = await ed.verify(signatureUint8Array, messageHashUint8Array, publicKey);
+        //console.log("isValid", isValid)
+        assert.ok(isValid)
+
+        let withdraw_spl_tx = await program.methods.withdrawSolBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array)).accounts({
+            signer: walletKeypair.publicKey,
+            admin: admin,
+            solVault: solVault,
+            receiver: userKeypair.publicKey,
+            priceFeed: priceFeed,
+            priceFeedProgram: priceFeedProgram,
+            systemProgram: anchor.web3.SystemProgram.programId,
+            ixSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+        }).preInstructions(Ed25519Program.createInstructionWithPublicKey({
+            publicKey: publicKey,
+            message: messageHashUint8Array,
+            signature: signatureUint8Array,
+        })).signers([walletKeypair]).rpc()
+        // .catch(e => console.error(e))
+
+        console.log("receiver Withdraws SOl BY signature", userToken, await provider.connection.getBalance(userKeypair.publicKey));
+
     });
 
     it("Withdraws SOL to Counter Party", async () => {
@@ -451,7 +541,7 @@ describe("cloud-sol-treasury", () => {
 
     });
 
-    console.log("字节 ",8+32+32+32+1+1+1+(8+8)*600+32+8+1+1+1,"10k=",10*1024)
+    console.log("字节 ", 8 + 32 + 32 + 32 + 1 + 1 + 1 + (8 + 8) * 600 + 32 + 8 + 1 + 1 + 1, "10k=", 10 * 1024)
 
 
 });

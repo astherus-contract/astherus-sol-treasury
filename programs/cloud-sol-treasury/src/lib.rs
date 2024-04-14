@@ -6,12 +6,14 @@ pub mod errors;
 pub mod events;
 pub mod utils;
 pub mod constants;
+pub mod sol;
 
 use anchor_lang::{prelude::*};
 use crate::init::*;
 use crate::deposit::*;
 use crate::withdraw::*;
 use crate::token::*;
+use crate::sol::*;
 
 
 declare_id!("CEbZve3kn48J3sdsNhiET35d93F5ydCEbgEVKCLr6oGX");
@@ -20,8 +22,8 @@ declare_id!("CEbZve3kn48J3sdsNhiET35d93F5ydCEbgEVKCLr6oGX");
 pub mod cloud_sol_treasury {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, withdraw_enabled: bool,sol_vault_bump: u8, hourly_limit: u64, operator: Pubkey, counter_party: Pubkey, truth_holder: Pubkey, price_feed_program: Pubkey) -> Result<()> {
-        return init::initialize(ctx, withdraw_enabled, sol_vault_bump, hourly_limit, operator, counter_party, truth_holder, price_feed_program);
+    pub fn initialize(ctx: Context<Initialize>, withdraw_enabled: bool, hourly_limit: u64, operator: Pubkey, counter_party: Pubkey, truth_holder: Pubkey, price_feed_program: Pubkey) -> Result<()> {
+        return init::initialize(ctx, withdraw_enabled, hourly_limit, operator, counter_party, truth_holder, price_feed_program);
     }
 
     pub fn update_global_withdraw_enabled(ctx: Context<UpdateAdmin>, global_withdraw_enabled: bool) -> Result<()> {
@@ -48,7 +50,15 @@ pub mod cloud_sol_treasury {
         return init::change_price_feed_program(ctx, price_feed_program);
     }
 
-    pub fn add_token(ctx: Context<AddToken>, enabled: bool, token_vault_authority_bump: u8,price: u64, fixed_price: bool, price_decimals: u8, token_decimals: u8) -> Result<()> {
+    pub fn add_sol(ctx: Context<AddSol>, enabled: bool, sol_vault_bump: u8, price: u64, fixed_price: bool, price_decimals: u8, token_decimals: u8) -> Result<()> {
+        return sol::add_sol(ctx, enabled, sol_vault_bump, price, fixed_price, price_decimals, token_decimals);
+    }
+
+    pub fn update_sol_enabled(ctx: Context<UpdateSolEnabled>, enabled: bool) -> Result<()> {
+        return sol::update_sol_enabled(ctx, enabled);
+    }
+
+    pub fn add_token(ctx: Context<AddToken>, enabled: bool, token_vault_authority_bump: u8, price: u64, fixed_price: bool, price_decimals: u8, token_decimals: u8) -> Result<()> {
         return token::add_token(ctx, enabled, token_vault_authority_bump, price, fixed_price, price_decimals, token_decimals);
     }
 
@@ -66,6 +76,10 @@ pub mod cloud_sol_treasury {
 
     pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64, dead_line: u64, idempotent: u64) -> Result<()> {
         return withdraw::withdraw_sol(ctx, amount, dead_line, idempotent);
+    }
+
+    pub fn withdraw_sol_by_signature(ctx: Context<WithdrawSolBySignature>, amount: u64, dead_line: u64, idempotent: u64, signature: [u8; 64]) -> Result<()> {
+        return withdraw::withdraw_sol_by_signature(ctx, amount, dead_line, idempotent, signature);
     }
 
     pub fn withdraw_sol_to_counter_party(ctx: Context<WithdrawSolToCounterParty>, amount: u64) -> Result<()> {
