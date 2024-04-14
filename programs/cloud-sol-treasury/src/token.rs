@@ -14,9 +14,9 @@ use crate::constants;
 
 pub fn add_token(ctx: Context<AddToken>, enabled: bool, token_vault_authority_bump: u8,price: u64, fixed_price: bool, price_decimals: u8, token_decimals: u8) -> Result<()> {
     let bank = &mut ctx.accounts.bank.load_init()?;
-    bank.authority = *ctx.accounts.signer.key;
-    bank.token_mint = *ctx.accounts.token_mint.to_account_info().key;
-    bank.token_vault_authority = *ctx.accounts.token_vault_authority.key;
+    bank.authority = ctx.accounts.signer.key();
+    bank.token_mint = ctx.accounts.token_mint.key();
+    bank.token_vault_authority = ctx.accounts.token_vault_authority.key();
     bank.token_vault_authority_bump = token_vault_authority_bump;
     bank.enabled = enabled;
     bank.price = price;

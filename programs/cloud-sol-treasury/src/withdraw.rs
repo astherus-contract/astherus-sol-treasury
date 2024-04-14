@@ -45,9 +45,9 @@ pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64, dead_line: u64, idem
     ctx.accounts.receiver.add_lamports(amount)?;
 
     emit!(WithdrawSolEvent{
-     from: *ctx.accounts.sol_vault.to_account_info().key,
-     to:*ctx.accounts.receiver.to_account_info().key,
-     signer: *ctx.accounts.signer.key,
+     from: ctx.accounts.sol_vault.key(),
+     to:ctx.accounts.receiver.key(),
+     signer: ctx.accounts.signer.key(),
      amount: amount,
     });
 
@@ -70,9 +70,9 @@ pub fn withdraw_sol_to_counter_party(ctx: Context<WithdrawSolToCounterParty>, am
     ctx.accounts.receiver.add_lamports(amount)?;
 
     emit!(WithdrawSolToCounterPartyEvent{
-     from: *ctx.accounts.sol_vault.to_account_info().key,
-     to:*ctx.accounts.receiver.to_account_info().key,
-     signer: *ctx.accounts.signer.key,
+     from: ctx.accounts.sol_vault.key(),
+     to:ctx.accounts.receiver.key(),
+     signer: ctx.accounts.signer.key(),
      amount: amount,
     });
 
@@ -127,9 +127,9 @@ pub fn withdraw_spl(ctx: Context<WithdrawSpl>, amount: u64, dead_line: u64, idem
     emit!(WithdrawSplEvent{
      token_mint: bank.token_mint,
      bank: ctx.accounts.bank.key(),
-     from: *ctx.accounts.token_vault.to_account_info().key,
-     to:*ctx.accounts.receiver.to_account_info().key,
-     signer: *ctx.accounts.signer.key,
+     from: ctx.accounts.token_vault.key(),
+     to:ctx.accounts.receiver.key(),
+     signer: ctx.accounts.signer.key(),
      amount: amount,
      idempotent:idempotent,
     });
@@ -152,12 +152,12 @@ pub fn withdraw_spl_by_signature(ctx: Context<WithdrawSplBySignature>, amount: u
         amount.to_string().as_bytes(),
         &ctx.accounts.admin.key().as_ref(),
         &ctx.accounts.bank.key().as_ref(),
-        &ctx.accounts.token_vault_authority.to_account_info().key().as_ref(),
-        &ctx.accounts.token_vault.to_account_info().key().as_ref(),
-        &ctx.accounts.receiver.to_account_info().key().as_ref(),
+        &ctx.accounts.token_vault_authority.key().as_ref(),
+        &ctx.accounts.token_vault.key().as_ref(),
+        &ctx.accounts.receiver.key().as_ref(),
         &ctx.accounts.price_feed.key().as_ref(),
         &ctx.accounts.price_feed_program.key().as_ref(),
-        &ctx.accounts.token_mint.to_account_info().key().as_ref(),
+        &ctx.accounts.token_mint.key().as_ref(),
     ]).to_bytes();
 
     let ix: Instruction = load_instruction_at_checked(0, &ctx.accounts.ix_sysvar)?;
@@ -191,9 +191,9 @@ pub fn withdraw_spl_by_signature(ctx: Context<WithdrawSplBySignature>, amount: u
         emit!(ClaimPausedEvent{
             token_mint: bank.token_mint,
             bank: ctx.accounts.bank.key(),
-            sender: *ctx.accounts.signer.key,
-            to:*ctx.accounts.receiver.to_account_info().key,
-            signer: *ctx.accounts.signer.key,
+            sender: ctx.accounts.signer.key(),
+            to:ctx.accounts.receiver.key(),
+            signer: ctx.accounts.signer.key(),
             amount: amount,
         });
         //todo 不应该抛出异常
@@ -230,9 +230,9 @@ pub fn withdraw_spl_by_signature(ctx: Context<WithdrawSplBySignature>, amount: u
     emit!(WithdrawSplEvent{
      token_mint: bank.token_mint,
      bank: ctx.accounts.bank.key(),
-     from: *ctx.accounts.token_vault.to_account_info().key,
-     to:*ctx.accounts.receiver.to_account_info().key,
-     signer: *ctx.accounts.signer.key,
+     from: ctx.accounts.token_vault.key(),
+     to:ctx.accounts.receiver.key(),
+     signer: ctx.accounts.signer.key(),
      amount: amount,
      idempotent:idempotent,
     });
@@ -273,9 +273,9 @@ pub fn withdraw_spl_to_counter_party(ctx: Context<WithdrawSplToCounterParty>, am
     emit!(TransferSplToCounterPartyEvent{
      token_mint: bank.token_mint,
      bank: ctx.accounts.bank.key(),
-     from: *ctx.accounts.token_vault.to_account_info().key,
-     to:*ctx.accounts.receiver.to_account_info().key,
-     signer: *ctx.accounts.signer.key,
+     from: ctx.accounts.token_vault.key(),
+     to:ctx.accounts.receiver.key(),
+     signer: ctx.accounts.signer.key(),
      amount: amount,
     });
 

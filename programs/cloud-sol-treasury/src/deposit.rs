@@ -35,9 +35,9 @@ pub fn deposit_sol(ctx: Context<DepositSol>, amount: u64) -> Result<()> {
     system_program::transfer(cpi, amount)?;
 
     emit!(DepositSolEvent{
-     from: *ctx.accounts.signer.key,
-     to:*ctx.accounts.sol_vault.to_account_info().key,
-     signer: *ctx.accounts.signer.key,
+     from: ctx.accounts.signer.key(),
+     to:ctx.accounts.sol_vault.key(),
+     signer: ctx.accounts.signer.key(),
      amount: amount,
     });
 
@@ -67,8 +67,8 @@ pub fn deposit_spl(ctx: Context<DepositSpl>, amount: u64) -> Result<()> {
     emit!(DepositSplEvent{
         token_mint: bank.token_mint,
         bank: ctx.accounts.bank.key(),
-        from: *ctx.accounts.depositor.to_account_info().key,
-        to:*ctx.accounts.token_vault.to_account_info().key,
+        from: ctx.accounts.depositor.key(),
+        to:ctx.accounts.token_vault.key(),
         signer: *ctx.accounts.signer.key,
         amount: amount,
     });
