@@ -25,8 +25,7 @@ pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64, dead_line: u64, idem
     let admin = &ctx.accounts.admin.load()?;
     let sol_vault = &mut ctx.accounts.sol_vault;
     let current_timestamp = Clock::get()?.unix_timestamp as u64;
-    require!(current_timestamp < dead_line, ErrorCode::AlreadyPassedDeadline);
-
+    require!(dead_line > current_timestamp , ErrorCode::AlreadyPassedDeadline);
 
     if !admin.global_withdraw_enabled {
         return Err(ErrorCode::DepositAndWithdrawalDisabled.into());
@@ -41,26 +40,7 @@ pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64, dead_line: u64, idem
         return Err(ErrorCode::InsufficientVaultBalance.into());
     };
 
-    // sol_vault 是系统账户
-    // let cpi_accounts = system_program::Transfer {
-    //     from: sol_vault.to_account_info(),
-    //     to: ctx.accounts.receiver.to_account_info(),
-    // };
-    //
-    // let seeds = &[
-    //     b"sol_vault",
-    //     bank.to_account_info().key.as_ref(),
-    //     &[bank.sol_vault_bump],
-    // ];
-    //
-    //
-    // let signer = &[&seeds[..]];
-    // let cpi = CpiContext::new_with_signer(sys_program.to_account_info(), cpi_accounts, signer);
-    //
-    // system_program::transfer(cpi, amount)?;
-
-
-    //sol_vault 是程序账户
+    //sol_vault 是pda
     ctx.accounts.sol_vault.sub_lamports(amount)?;
     ctx.accounts.receiver.add_lamports(amount)?;
 
@@ -99,6 +79,7 @@ pub fn withdraw_sol_to_counter_party(ctx: Context<WithdrawSolToCounterParty>, am
     Ok(())
 }
 
+//钱包发起交易上链
 pub fn withdraw_spl(ctx: Context<WithdrawSpl>, amount: u64, dead_line: u64, idempotent: u64) -> Result<()> {
     let admin = &ctx.accounts.admin.load()?;
     let bank = &mut ctx.accounts.bank.load_mut()?;
@@ -118,15 +99,6 @@ pub fn withdraw_spl(ctx: Context<WithdrawSpl>, amount: u64, dead_line: u64, idem
         return Err(ErrorCode::WithdrawalExceedsMaximumProcessingLimit.into());
     }
 
-    //require!(!bank.claim_history.contains_key(idempotent), ErrorCode::AlreadyClaimed);
-
-    // let cursor = current_timestamp / 60 * 60 * 1000;
-    // let per_hour = admin.claim_per_hours.get(cursor).unwrap_or(0);
-    // if (per_hour + amount) > admin.hourly_limit {
-    //     //todo disable withdraw
-    //     //todo emit
-    //     return Err(ErrorCode::WithdrawalExceedsLimit.into());
-    // }
 
     let cpi_accounts = SplTransfer {
         from: ctx.accounts.token_vault.to_account_info(),
@@ -151,7 +123,6 @@ pub fn withdraw_spl(ctx: Context<WithdrawSpl>, amount: u64, dead_line: u64, idem
 
     anchor_spl::token::transfer(cpi, amount)?;
 
-    // admin.claim_per_hours.insert(cursor, per_hour + amount);
 
     emit!(WithdrawSplEvent{
      token_mint: bank.token_mint,
@@ -166,9 +137,14 @@ pub fn withdraw_spl(ctx: Context<WithdrawSpl>, amount: u64, dead_line: u64, idem
     Ok(())
 }
 
+//钱包签名消息，用户发起交易上链
 pub fn withdraw_spl_by_signature(ctx: Context<WithdrawSplBySignature>, amount: u64, dead_line: u64, idempotent: u64, signature: [u8; 64]) -> Result<()> {
     let admin = &mut ctx.accounts.admin.load_mut()?;
     let bank = &mut ctx.accounts.bank.load_mut()?;
+
+    if !bank.enabled || !admin.global_withdraw_enabled {
+        return Err(ErrorCode::DepositAndWithdrawalDisabled.into());
+    }
 
     let msg_hash = keccak(&[
         idempotent.to_string().as_bytes(),
@@ -188,10 +164,6 @@ pub fn withdraw_spl_by_signature(ctx: Context<WithdrawSplBySignature>, amount: u
 
     // Check that ix is what we expect to have been sent
     utils::verify_ed25519_ix(&ix, admin.truth_holder.as_ref(), &msg_hash, &signature)?;
-
-    if !bank.enabled || !admin.global_withdraw_enabled {
-        return Err(ErrorCode::DepositAndWithdrawalDisabled.into());
-    }
 
     let current_timestamp = Clock::get()?.unix_timestamp as u64;
 

@@ -185,7 +185,7 @@ impl Bank {
 
     pub fn add_claim_history_item(&mut self, idempotent: u64, dead_line: u64, current_timestamp: u64) -> bool {
         for item in self.claim_history.iter_mut() {
-            if item.dead_line <= (current_timestamp + 120) {
+            if item.dead_line <= (current_timestamp - 120) {
                 item.dead_line = dead_line;
                 item.idempotent = idempotent;
                 return true;
