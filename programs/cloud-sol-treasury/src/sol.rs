@@ -16,8 +16,8 @@ pub fn add_sol(ctx: Context<AddSol>, enabled: bool, sol_vault_bump: u8, price: u
     sol_vault.fixed_price = fixed_price;
     sol_vault.price_decimals = price_decimals;
     sol_vault.token_decimals = token_decimals;
-    sol_vault.price_feed = *ctx.accounts.price_feed.key;
-
+    sol_vault.price_feed = ctx.accounts.price_feed.key();
+    sol_vault.admin = ctx.accounts.admin.key();
     admin.sol_vault_bump = sol_vault_bump;
 
     if !fixed_price {
@@ -72,7 +72,7 @@ pub struct UpdateSolEnabled<'info> {
     #[account(constraint = admin.load() ?.authority == * signer.key)]
     pub admin: AccountLoader<'info, Admin>,
 
-    #[account(seeds = [constants::SOL_VAULT.as_bytes(),admin.key().as_ref()], bump = admin.load() ?.sol_vault_bump)]
+    #[account(has_one = admin, seeds = [constants::SOL_VAULT.as_bytes(), admin.key().as_ref()], bump = admin.load() ?.sol_vault_bump)]
     pub sol_vault: AccountLoader<'info, SolVault>,
     pub system_program: Program<'info, System>,
 }
@@ -81,10 +81,11 @@ pub struct UpdateSolEnabled<'info> {
 #[derive(Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct SolVault {
-    //8+1+(8+8)*600+32+8+1+1+1=9652<10240
+    //8+1+(8+8)*600+32+8+1+1+1=9684<10240
     pub enabled: bool,
     pub claim_history: [ClaimHistoryItem; 600],
     pub price_feed: Pubkey,
+    pub admin: Pubkey,
     pub price: u64,
     pub fixed_price: bool,
     pub price_decimals: u8,

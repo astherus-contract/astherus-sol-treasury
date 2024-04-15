@@ -409,7 +409,7 @@ pub struct WithdrawSol<'info> {
     pub signer: Signer<'info>,
     #[account(mut, constraint = admin.load() ?.authority == * signer.key)]
     pub admin: AccountLoader<'info, Admin>,
-    #[account(mut, seeds = [constants::SOL_VAULT.as_bytes(),admin.key().as_ref()], bump = admin.load() ?.sol_vault_bump)]
+    #[account(mut, has_one = admin, has_one = price_feed, seeds = [constants::SOL_VAULT.as_bytes(), admin.key().as_ref()], bump = admin.load() ?.sol_vault_bump)]
     pub sol_vault: AccountLoader<'info, SolVault>,
     /// CHECK:
     #[account(mut)]
@@ -428,7 +428,7 @@ pub struct WithdrawSolBySignature<'info> {
     pub signer: Signer<'info>,
     #[account(mut, has_one = price_feed_program)]
     pub admin: AccountLoader<'info, Admin>,
-    #[account(mut, seeds = [constants::SOL_VAULT.as_bytes(),admin.key().as_ref()], bump = admin.load() ?.sol_vault_bump, has_one = price_feed)]
+    #[account(mut, has_one = admin, has_one = price_feed, seeds = [constants::SOL_VAULT.as_bytes(), admin.key().as_ref()], bump = admin.load() ?.sol_vault_bump)]
     pub sol_vault: AccountLoader<'info, SolVault>,
     /// CHECK:
     #[account(mut)]
@@ -451,7 +451,7 @@ pub struct WithdrawSolToCounterParty<'info> {
     pub signer: Signer<'info>,
     #[account(mut, constraint = admin.load() ?.operator == * signer.key)]
     pub admin: AccountLoader<'info, Admin>,
-    #[account(mut, seeds = [constants::SOL_VAULT.as_bytes(),admin.key().as_ref()], bump = admin.load() ?.sol_vault_bump)]
+    #[account(mut, has_one = admin, seeds = [constants::SOL_VAULT.as_bytes(), admin.key().as_ref()], bump = admin.load() ?.sol_vault_bump)]
     pub sol_vault: AccountLoader<'info, SolVault>,
     /// CHECK:
     #[account(mut, constraint = admin.load() ?.counter_party == * receiver.key)]
@@ -463,9 +463,9 @@ pub struct WithdrawSolToCounterParty<'info> {
 pub struct WithdrawSpl<'info> {
     #[account()]
     pub signer: Signer<'info>,
-    #[account(mut, constraint = admin.load() ?.authority == * signer.key)]
+    #[account(mut, constraint = admin.load() ?.authority == * signer.key,)]
     pub admin: AccountLoader<'info, Admin>,
-    #[account(mut, has_one = token_vault_authority, constraint = bank.load() ?.authority == * signer.key)]
+    #[account(mut, has_one = token_vault_authority, has_one = admin, constraint = bank.load() ?.authority == * signer.key)]
     pub bank: AccountLoader<'info, Bank>,
 
     /// CHECK
@@ -494,7 +494,7 @@ pub struct WithdrawSplToCounterParty<'info> {
     pub signer: Signer<'info>,
     #[account(mut, constraint = admin.load() ?.operator == * signer.key)]
     pub admin: AccountLoader<'info, Admin>,
-    #[account(has_one = token_vault_authority)]
+    #[account(has_one = token_vault_authority, has_one = admin)]
     pub bank: AccountLoader<'info, Bank>,
 
     /// CHECK
@@ -518,7 +518,7 @@ pub struct WithdrawSplBySignature<'info> {
     pub signer: Signer<'info>,
     #[account(mut, has_one = price_feed_program)]
     pub admin: AccountLoader<'info, Admin>,
-    #[account(mut, has_one = token_vault_authority, has_one = price_feed)]
+    #[account(mut, has_one = token_vault_authority, has_one = price_feed, has_one = admin)]
     pub bank: AccountLoader<'info, Bank>,
 
     /// CHECK

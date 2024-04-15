@@ -15,6 +15,7 @@ use crate::constants;
 pub fn add_token(ctx: Context<AddToken>, enabled: bool, token_vault_authority_bump: u8,price: u64, fixed_price: bool, price_decimals: u8, token_decimals: u8) -> Result<()> {
     let bank = &mut ctx.accounts.bank.load_init()?;
     bank.authority = ctx.accounts.signer.key();
+    bank.admin = ctx.accounts.admin.key();
     bank.token_mint = ctx.accounts.token_mint.key();
     bank.token_vault_authority = ctx.accounts.token_vault_authority.key();
     bank.token_vault_authority_bump = token_vault_authority_bump;
@@ -23,7 +24,7 @@ pub fn add_token(ctx: Context<AddToken>, enabled: bool, token_vault_authority_bu
     bank.fixed_price = fixed_price;
     bank.price_decimals = price_decimals;
     bank.token_decimals = token_decimals;
-    bank.price_feed = *ctx.accounts.price_feed.key;
+    bank.price_feed = ctx.accounts.price_feed.key();
 
     if !fixed_price {
         let decimals = chainlink::decimals(

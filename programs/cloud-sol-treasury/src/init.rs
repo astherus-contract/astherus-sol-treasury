@@ -12,7 +12,7 @@ pub fn initialize(ctx: Context<Initialize>, global_withdraw_enabled: bool, hourl
     admin.init = true;
     admin.global_withdraw_enabled = global_withdraw_enabled;
     admin.hourly_limit = hourly_limit;
-    admin.authority = *ctx.accounts.signer.key;
+    admin.authority = ctx.accounts.signer.key();
     admin.operator = operator;
     admin.counter_party = counter_party;
     admin.truth_holder = truth_holder;
@@ -21,7 +21,7 @@ pub fn initialize(ctx: Context<Initialize>, global_withdraw_enabled: bool, hourl
         init : true,
         global_withdraw_enabled : global_withdraw_enabled,
         hourly_limit : hourly_limit,
-        authority : *ctx.accounts.signer.key,
+        authority : ctx.accounts.signer.key(),
         operator : operator,
         counter_party : counter_party,
         truth_holder : truth_holder,
@@ -153,8 +153,9 @@ pub struct Admin {
 #[derive(Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct Bank {
-    //8+32+32+32+1+1+1+(8+8)*600+32+8+1+1+1=9750<10240
+    //8++32+32+32+32+1+1+1+(8+8)*600+32+8+1+1+1=9782<10240
     pub authority: Pubkey,
+    pub admin: Pubkey,
     pub token_mint: Pubkey,
     pub token_vault_authority: Pubkey,
     pub token_vault_authority_bump: u8,

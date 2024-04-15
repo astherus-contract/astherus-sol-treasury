@@ -72,7 +72,7 @@ pub fn deposit_spl(ctx: Context<DepositSpl>, amount: u64) -> Result<()> {
         bank: ctx.accounts.bank.key(),
         from: ctx.accounts.depositor.key(),
         to:ctx.accounts.token_vault.key(),
-        signer: *ctx.accounts.signer.key,
+        signer: ctx.accounts.signer.key(),
         amount: amount,
     });
 
@@ -85,7 +85,7 @@ pub struct DepositSol<'info> {
     pub signer: Signer<'info>,
     #[account()]
     pub admin: AccountLoader<'info, Admin>,
-    #[account(mut, seeds = [constants::SOL_VAULT.as_bytes(),admin.key().as_ref()], bump = admin.load() ?.sol_vault_bump)]
+    #[account(mut, has_one = admin, seeds = [constants::SOL_VAULT.as_bytes(), admin.key().as_ref()], bump = admin.load() ?.sol_vault_bump)]
     pub sol_vault: AccountLoader<'info, SolVault>,
     pub system_program: Program<'info, System>,
 }
@@ -97,7 +97,7 @@ pub struct DepositSpl<'info> {
     #[account()]
     pub admin: AccountLoader<'info, Admin>,
 
-    #[account(has_one = token_vault_authority)]
+    #[account(has_one = token_vault_authority, has_one = admin)]
     pub bank: AccountLoader<'info, Bank>,
 
     /// CHECK
