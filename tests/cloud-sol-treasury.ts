@@ -18,6 +18,7 @@ import {
     TOKEN_PROGRAM_ID
 } from "@solana/spl-token";
 import {PublicKey, TokenAccountsFilter, ComputeBudgetProgram, Transaction, Ed25519Program} from "@solana/web3.js";
+import {equal} from "assert";
 
 describe("cloud-sol-treasury", () => {
     // Configure the client to use the local cluster.
@@ -53,20 +54,63 @@ describe("cloud-sol-treasury", () => {
         ],
         program.programId);
 
-    // const [solVault, sol_vault_bump] = anchor.web3.PublicKey.findProgramAddressSync(
-    //     [anchor.utils.bytes.utf8.encode("sol_vault"),
-    //         bankKeypair.publicKey.toBuffer()
-    //     ],
-    //     program.programId);
-
     const [solVault, sol_vault_bump] = anchor.web3.PublicKey.findProgramAddressSync(
-        [anchor.utils.bytes.utf8.encode("sol_vault"),admin.toBuffer()
+        [anchor.utils.bytes.utf8.encode("sol_vault"), admin.toBuffer()
         ],
         program.programId);
 
     let tokenVault;
     let userToken;
     let counterPartyToken;
+
+    async function withdrawsSolBySignature(idempotent: anchor.BN, deadLine: anchor.BN, amount: anchor.BN) {
+        let solVaultBefore = await provider.connection.getBalance(solVault);
+        let receiverBefore = await provider.connection.getBalance(userKeypair.publicKey);
+
+        const msg = Buffer.concat([
+            Buffer.from(idempotent.toString()),
+            Buffer.from(deadLine.toString()),
+            Buffer.from(amount.toString()),
+            admin.toBytes(),
+            solVault.toBytes(),
+            userKeypair.publicKey.toBytes(),
+            priceFeed.toBytes(),
+            priceFeedProgram.toBytes(),
+        ])
+
+        let messageHash = createKeccakHash('keccak256').update(msg).digest('hex')
+        let messageHashUint8Array = Buffer.from(messageHash, 'hex').valueOf()
+
+        const publicKey = new PublicKey(walletKeypair.publicKey.toBase58()).toBytes();
+        const privateKey = walletKeypair.secretKey;
+
+        const signatureUint8Array = await ed.sign(messageHashUint8Array, privateKey.slice(0, 32));
+        let signature = Buffer.from(signatureUint8Array).toString("hex");
+        const isValid = await ed.verify(signatureUint8Array, messageHashUint8Array, publicKey);
+        assert.ok(isValid)
+
+        let withdraw_spl_tx = await program.methods.withdrawSolBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array)).accounts({
+            signer: walletKeypair.publicKey,
+            admin: admin,
+            solVault: solVault,
+            receiver: userKeypair.publicKey,
+            priceFeed: priceFeed,
+            priceFeedProgram: priceFeedProgram,
+            systemProgram: anchor.web3.SystemProgram.programId,
+            ixSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+        }).preInstructions(Ed25519Program.createInstructionWithPublicKey({
+            publicKey: publicKey,
+            message: messageHashUint8Array,
+            signature: signatureUint8Array,
+        })).signers([walletKeypair]).rpc()
+        // .catch(e => console.error(e))
+
+        let solVaultAfter = await provider.connection.getBalance(solVault);
+        let receiverAfter = await provider.connection.getBalance(userKeypair.publicKey);
+
+        assert.equal(new anchor.BN(solVaultBefore).sub(new anchor.BN(solVaultAfter)).toString(), amount.toString())
+        assert.equal(new anchor.BN(receiverAfter).sub(new anchor.BN(receiverBefore)).toString(), amount.toString())
+    }
 
     before(async () => {
         async function requestAirdrop(publicKey: PublicKey) {
@@ -121,8 +165,8 @@ describe("cloud-sol-treasury", () => {
         userToken = deposit_auth_usdc_acct.address;
     });
 
-    it("Is initialized!", async () => {
-        const tx = await program.methods.initialize(true, new anchor.BN(100e12), walletKeypair.publicKey, walletKeypair.publicKey, walletKeypair.publicKey, priceFeedProgram)
+    it("Is initialized", async () => {
+        const tx = await program.methods.initialize(true, new anchor.BN(100e8), walletKeypair.publicKey, walletKeypair.publicKey, walletKeypair.publicKey, priceFeedProgram)
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
@@ -130,15 +174,10 @@ describe("cloud-sol-treasury", () => {
             }).signers([walletKeypair]).rpc();
 
         //.catch(e => console.error(e))
-
-        //console.log("Your transaction signature", tx);
-
-        // let result = await program.account.admin.fetch(adminKeypair.publicKey);
-        // console.log(result);
     });
 
-    it("Is createdSol!", async () => {
-        const tx = await program.methods.addSol(true, sol_vault_bump, new anchor.BN(1e6), true, new anchor.BN(6), new anchor.BN(6))
+    it("Is add sol", async () => {
+        const tx = await program.methods.addSol(true, sol_vault_bump, new anchor.BN(1e6), true, new anchor.BN(6), new anchor.BN(9))
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
@@ -147,14 +186,9 @@ describe("cloud-sol-treasury", () => {
                 priceFeedProgram: priceFeedProgram,
                 systemProgram: anchor.web3.SystemProgram.programId,
             }).signers([walletKeypair]).rpc();
-
-        //console.log("Your transaction signature", tx);
-
-        // let result = await program.account.bank.fetch(bankKeypair.publicKey);
-        // //console.log(result);
     });
 
-    it("Is createdBank!", async () => {
+    it("Is add token", async () => {
         const tx = await program.methods.addToken(true, token_vault_authority_bump, new anchor.BN(1e6), true, new anchor.BN(6), new anchor.BN(6))
             .accounts({
                 signer: walletKeypair.publicKey,
@@ -177,40 +211,35 @@ describe("cloud-sol-treasury", () => {
     });
 
     it("Deposits SOL", async () => {
-        const deposit_amount = new anchor.BN(25 * anchor.web3.LAMPORTS_PER_SOL);
-        // console.log(userKeypair.publicKey)
-        // console.log(bankKeypair.publicKey)
-        // console.log(solVault)
+        const amount = new anchor.BN(25 * anchor.web3.LAMPORTS_PER_SOL);
+        let solVaultBefore = await provider.connection.getBalance(solVault);
+        let depositorBefore = await provider.connection.getBalance(walletKeypair.publicKey);
 
-
-        const deposit_sol_tx = await program.methods.depositSol(deposit_amount)
+        const deposit_sol_tx = await program.methods.depositSol(amount)
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
                 solVault: solVault,
                 systemProgram: anchor.web3.SystemProgram.programId,
-            }).signers([walletKeypair]).rpc().catch(e => console.error(e))
-        console.log(deposit_sol_tx);
+            }).signers([walletKeypair]).rpc()
+        // .catch(e => console.error(e))
 
-        let sol_vault_balance = await provider.connection.getBalance(solVault);
-        console.log(sol_vault_balance);
-
-        // let result = await program.account.bank.fetch(walletKeypair.publicKey);
-        // console.log(result);
+        let solVaultAfter = await provider.connection.getBalance(solVault);
+        let depositorAfter = await provider.connection.getBalance(walletKeypair.publicKey);
+        assert.equal(new anchor.BN(solVaultAfter).sub(new anchor.BN(solVaultBefore)).toString(), amount.toString())
+        assert.equal(new anchor.BN(depositorBefore).sub(new anchor.BN(depositorAfter)).toString(), amount.toString())
 
     });
 
     it("Withdraws SOL", async () => {
         let amount = new anchor.BN(10 * anchor.web3.LAMPORTS_PER_SOL);
+        let solVaultBefore = await provider.connection.getBalance(solVault);
+        let receiverBefore = await provider.connection.getBalance(userKeypair.publicKey);
 
-        console.log("solVault AccountInfo", solVault, await provider.connection.getAccountInfo(solVault));
-
-
-        const withdraw_sol_tx = await program.methods.withdrawSol(amount, new anchor.BN(Date.now() + 10 * 1000), new anchor.BN(Date.now()))
+        const withdraw_sol_tx = await program.methods.withdrawSol(amount, new anchor.BN(Date.now() / 1000 + 10), new anchor.BN(Date.now()))
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
-                // bank: bankKeypair.publicKey,
                 solVault: solVault,
                 receiver: userKeypair.publicKey,
                 priceFeed: priceFeed,
@@ -220,15 +249,15 @@ describe("cloud-sol-treasury", () => {
                 skipPreflight: true
             })
 
-        // let userKeypair_balance = await provider.connection.getBalance(userKeypair.publicKey);
-        // console.log("userKeypair_balance", userKeypair_balance);
+        let solVaultAfter = await provider.connection.getBalance(solVault);
+        let receiverAfter = await provider.connection.getBalance(userKeypair.publicKey);
 
-        console.log("solVault AccountInfo", solVault, await provider.connection.getAccountInfo(solVault));
-
+        assert.equal(new anchor.BN(solVaultBefore).sub(new anchor.BN(solVaultAfter)).toString(), amount.toString())
+        assert.equal(new anchor.BN(receiverAfter).sub(new anchor.BN(receiverBefore)).toString(), amount.toString())
 
     });
 
-    it("Is updateGlobalWithdrawEnabled!", async () => {
+    it("Is updateGlobalWithdrawEnabled", async () => {
         const tx = await program.methods.updateGlobalWithdrawEnabled(true)
             .accounts({
                 signer: walletKeypair.publicKey,
@@ -236,27 +265,27 @@ describe("cloud-sol-treasury", () => {
                 systemProgram: anchor.web3.SystemProgram.programId,
             }).signers([walletKeypair]).rpc();
 
-        console.log("Your transaction signature", tx);
+        //console.log("Your transaction signature", tx);
 
         // let result = await program.account.admin.fetch(adminKeypair.publicKey);
         // console.log(result);
     });
 
-    it("Is updateHourlyLimit!", async () => {
-        const tx = await program.methods.updateHourlyLimit(new anchor.BN(1000000000e6))
+    it("Is updateHourlyLimit", async () => {
+        const tx = await program.methods.updateHourlyLimit(new anchor.BN(100e8))
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
                 systemProgram: anchor.web3.SystemProgram.programId,
             }).signers([walletKeypair]).rpc();
 
-        console.log("Your transaction signature", tx);
+        //console.log("Your transaction signature", tx);
 
         // let result = await program.account.admin.fetch(adminKeypair.publicKey);
         // console.log(result);
     });
 
-    it("Is changeOperator!", async () => {
+    it("Is changeOperator", async () => {
         const tx = await program.methods.changeOperator(operatorKeypair.publicKey)
             .accounts({
                 signer: walletKeypair.publicKey,
@@ -264,13 +293,13 @@ describe("cloud-sol-treasury", () => {
                 systemProgram: anchor.web3.SystemProgram.programId,
             }).signers([walletKeypair]).rpc();
 
-        console.log("Your transaction signature", tx);
+        //console.log("Your transaction signature", tx);
 
         // let result = await program.account.admin.fetch(adminKeypair.publicKey);
         // console.log(result);
     });
 
-    it("Is changeCounterParty!", async () => {
+    it("Is changeCounterParty", async () => {
         const tx = await program.methods.changeCounterParty(counterPartyKeypair.publicKey)
             .accounts({
                 signer: walletKeypair.publicKey,
@@ -278,13 +307,13 @@ describe("cloud-sol-treasury", () => {
                 systemProgram: anchor.web3.SystemProgram.programId,
             }).signers([walletKeypair]).rpc();
 
-        console.log("Your transaction signature", tx);
+        //console.log("Your transaction signature", tx);
 
         // let result = await program.account.admin.fetch(adminKeypair.publicKey);
         // console.log(result);
     });
 
-    it("Is changeTruthHolder!", async () => {
+    it("Is changeTruthHolder", async () => {
         const tx = await program.methods.changeTruthHolder(walletKeypair.publicKey)
             .accounts({
                 signer: walletKeypair.publicKey,
@@ -292,11 +321,11 @@ describe("cloud-sol-treasury", () => {
                 systemProgram: anchor.web3.SystemProgram.programId,
             }).signers([walletKeypair]).rpc();
 
-        console.log("Your transaction signature", tx);
+        //console.log("Your transaction signature", tx);
 
     });
 
-    it("Is changePriceFeedProgram!", async () => {
+    it("Is changePriceFeedProgram", async () => {
         const tx = await program.methods.changePriceFeedProgram(priceFeedProgram)
             .accounts({
                 signer: walletKeypair.publicKey,
@@ -304,7 +333,7 @@ describe("cloud-sol-treasury", () => {
                 systemProgram: anchor.web3.SystemProgram.programId,
             }).signers([walletKeypair]).rpc();
 
-        console.log("Your transaction signature", tx);
+        //console.log("Your transaction signature", tx);
 
         // let result = await program.account.admin.fetch(adminKeypair.publicKey);
         // console.log(result);
@@ -314,9 +343,11 @@ describe("cloud-sol-treasury", () => {
     });
 
     it("Deposits SPL Token", async () => {
-        console.log("userToken getTokenAccountBalance", userToken, await provider.connection.getTokenAccountBalance(userToken));
+        let amount = new anchor.BN(25e6);
+        let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
+        let depositorBefore = await provider.connection.getTokenAccountBalance(userToken);
 
-        let deposit_spl_tx = await program.methods.depositSpl(new anchor.BN(25e6)).accounts(
+        let deposit_spl_tx = await program.methods.depositSpl(amount).accounts(
             {
                 signer: walletKeypair.publicKey,
                 admin: admin,
@@ -331,16 +362,21 @@ describe("cloud-sol-treasury", () => {
 
             }
         ).signers([walletKeypair]).rpc();
-        console.log("userToken getTokenAccountBalance", userToken, await provider.connection.getTokenAccountBalance(userToken));
 
-        //console.log(deposit_spl_tx);
+        let tokenVaultAfter = await provider.connection.getTokenAccountBalance(tokenVault);
+        let depositorAfter = await provider.connection.getTokenAccountBalance(userToken);
+
+        assert.equal(new anchor.BN(depositorBefore.value.amount).sub(new anchor.BN(depositorAfter.value.amount)).toString(), amount.toString())
+        assert.equal(new anchor.BN(tokenVaultAfter.value.amount).sub(new anchor.BN(tokenVaultBefore.value.amount)).toString(), amount.toString())
 
     });
 
     it("Withdraws SPL Token", async () => {
-        //console.log("userToken getTokenAccountBalance", userToken, await provider.connection.getTokenAccountBalance(userToken));
+        let amount = new anchor.BN(1e6);
+        let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
+        let receiverBefore = await provider.connection.getTokenAccountBalance(userToken);
 
-        let withdraw_spl_tx = await program.methods.withdrawSpl(new anchor.BN(1e6), new anchor.BN(Date.now() + 10 * 1000), new anchor.BN(Date.now())).accounts({
+        let withdraw_spl_tx = await program.methods.withdrawSpl(amount, new anchor.BN(Date.now() + 10 * 1000), new anchor.BN(Date.now())).accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             bank: bankKeypair.publicKey,
@@ -354,23 +390,24 @@ describe("cloud-sol-treasury", () => {
             tokenProgram: TOKEN_PROGRAM_ID,
             systemProgram: anchor.web3.SystemProgram.programId,
         }).signers([walletKeypair]).rpc();
-        //console.log("userToken getTokenAccountBalance", userToken, await provider.connection.getTokenAccountBalance(userToken));
 
-        //console.log(withdraw_spl_tx);
+        let tokenVaultAfter = await provider.connection.getTokenAccountBalance(tokenVault);
+        let receiverAfter = await provider.connection.getTokenAccountBalance(userToken);
+
+        assert.equal(new anchor.BN(tokenVaultBefore.value.amount).sub(new anchor.BN(tokenVaultAfter.value.amount)).toString(), amount.toString())
+        assert.equal(new anchor.BN(receiverAfter.value.amount).sub(new anchor.BN(receiverBefore.value.amount)).toString(), amount.toString())
 
     });
 
     it("Withdraws SPL Token BY signature", async () => {
-
-        console.log("userToken getTokenAccountBalance", userToken, await provider.connection.getTokenAccountBalance(userToken));
-
-
         let now = Date.now();
-        let idempotent = new anchor.BN(now / 1000);
+        let idempotent = new anchor.BN(now);
         let deadLine = new anchor.BN((Date.now() / 1000 + 10));
         let amount = new anchor.BN(10e6);
 
-        //const msg = Buffer.from("hello")
+        let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
+        let receiverBefore = await provider.connection.getTokenAccountBalance(userToken);
+
         const msg = Buffer.concat([
             Buffer.from(idempotent.toString()),
             Buffer.from(deadLine.toString()),
@@ -386,18 +423,14 @@ describe("cloud-sol-treasury", () => {
         ])
 
         let messageHash = createKeccakHash('keccak256').update(msg).digest('hex')
-        //console.log("messageHash", messageHash)
         let messageHashUint8Array = Buffer.from(messageHash, 'hex').valueOf()
 
         const publicKey = new PublicKey(walletKeypair.publicKey.toBase58()).toBytes();
         const privateKey = walletKeypair.secretKey;
-        //console.log("publicKey", Buffer.from(publicKey).toString('hex'))
 
         const signatureUint8Array = await ed.sign(messageHashUint8Array, privateKey.slice(0, 32));
         let signature = Buffer.from(signatureUint8Array).toString("hex");
-        //console.log("signature", signature)
         const isValid = await ed.verify(signatureUint8Array, messageHashUint8Array, publicKey);
-        //console.log("isValid", isValid)
         assert.ok(isValid)
 
         let withdraw_spl_tx = await program.methods.withdrawSplBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array)).accounts({
@@ -421,91 +454,52 @@ describe("cloud-sol-treasury", () => {
         })).signers([walletKeypair]).rpc()
         // .catch(e => console.error(e))
 
-        console.log("userToken getTokenAccountBalance", userToken, await provider.connection.getTokenAccountBalance(userToken));
+        let tokenVaultAfter = await provider.connection.getTokenAccountBalance(tokenVault);
+        let receiverAfter = await provider.connection.getTokenAccountBalance(userToken);
+
+        assert.equal(new anchor.BN(tokenVaultBefore.value.amount).sub(new anchor.BN(tokenVaultAfter.value.amount)).toString(), amount.toString())
+        assert.equal(new anchor.BN(receiverAfter.value.amount).sub(new anchor.BN(receiverBefore.value.amount)).toString(), amount.toString())
 
     });
 
     it("Withdraws SOl BY signature", async () => {
-
-        console.log("receiver Withdraws SOl BY signature", userToken, await provider.connection.getBalance(userKeypair.publicKey));
-
         let now = Date.now();
-        let idempotent = new anchor.BN(now / 1000);
+        let idempotent = new anchor.BN(now);
         let deadLine = new anchor.BN((Date.now() / 1000 + 10));
         let amount = new anchor.BN(10e6);
 
-        //const msg = Buffer.from("hello")
-        const msg = Buffer.concat([
-            Buffer.from(idempotent.toString()),
-            Buffer.from(deadLine.toString()),
-            Buffer.from(amount.toString()),
-            admin.toBytes(),
-            solVault.toBytes(),
-            userKeypair.publicKey.toBytes(),
-            priceFeed.toBytes(),
-            priceFeedProgram.toBytes(),
-        ])
-
-        let messageHash = createKeccakHash('keccak256').update(msg).digest('hex')
-        //console.log("messageHash", messageHash)
-        let messageHashUint8Array = Buffer.from(messageHash, 'hex').valueOf()
-
-        const publicKey = new PublicKey(walletKeypair.publicKey.toBase58()).toBytes();
-        const privateKey = walletKeypair.secretKey;
-        //console.log("publicKey", Buffer.from(publicKey).toString('hex'))
-
-        const signatureUint8Array = await ed.sign(messageHashUint8Array, privateKey.slice(0, 32));
-        let signature = Buffer.from(signatureUint8Array).toString("hex");
-        //console.log("signature", signature)
-        const isValid = await ed.verify(signatureUint8Array, messageHashUint8Array, publicKey);
-        //console.log("isValid", isValid)
-        assert.ok(isValid)
-
-        let withdraw_spl_tx = await program.methods.withdrawSolBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array)).accounts({
-            signer: walletKeypair.publicKey,
-            admin: admin,
-            solVault: solVault,
-            receiver: userKeypair.publicKey,
-            priceFeed: priceFeed,
-            priceFeedProgram: priceFeedProgram,
-            systemProgram: anchor.web3.SystemProgram.programId,
-            ixSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
-        }).preInstructions(Ed25519Program.createInstructionWithPublicKey({
-            publicKey: publicKey,
-            message: messageHashUint8Array,
-            signature: signatureUint8Array,
-        })).signers([walletKeypair]).rpc()
-        // .catch(e => console.error(e))
-
-        console.log("receiver Withdraws SOl BY signature", userToken, await provider.connection.getBalance(userKeypair.publicKey));
-
+        await withdrawsSolBySignature(idempotent, deadLine, amount)
     });
 
     it("Withdraws SOL to Counter Party", async () => {
         let amount = new anchor.BN(1 * anchor.web3.LAMPORTS_PER_SOL);
-
-        console.log("solVault AccountInfo", solVault, await provider.connection.getAccountInfo(solVault));
-
+        let solVaultBefore = await provider.connection.getBalance(solVault);
+        let receiverBefore = await provider.connection.getBalance(counterPartyKeypair.publicKey);
 
         const withdraw_sol_tx = await program.methods.withdrawSolToCounterParty(amount)
             .accounts({
                 signer: operatorKeypair.publicKey,
                 admin: admin,
-                // bank: bankKeypair.publicKey,
                 solVault: solVault,
                 receiver: counterPartyKeypair.publicKey,
                 systemProgram: anchor.web3.SystemProgram.programId,
             }).signers([operatorKeypair]).rpc({
                 skipPreflight: true
             });
+        let solVaultAfter = await provider.connection.getBalance(solVault);
+        let receiverAfter = await provider.connection.getBalance(counterPartyKeypair.publicKey);
 
-        let userKeypair_balance = await provider.connection.getBalance(userKeypair.publicKey);
-        console.log("userKeypair_balance", userKeypair_balance);
+        assert.equal(new anchor.BN(solVaultBefore).sub(new anchor.BN(solVaultAfter)).toString(), amount.toString())
+        assert.equal(new anchor.BN(receiverAfter).sub(new anchor.BN(receiverBefore)).toString(), amount.toString())
 
     });
 
     it("Withdraws SPL Token To Counter Party", async () => {
-        let withdraw_spl_tx = await program.methods.withdrawSplToCounterParty(new anchor.BN(1e6)).accounts({
+        let amount = new anchor.BN(1e6);
+        let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
+        let receiverBefore = await provider.connection.getTokenAccountBalance(counterPartyToken);
+
+        let withdraw_spl_tx = await program.methods.withdrawSplToCounterParty(amount).accounts({
             signer: operatorKeypair.publicKey,
             admin: admin,
             bank: bankKeypair.publicKey,
@@ -520,8 +514,58 @@ describe("cloud-sol-treasury", () => {
             skipPreflight: true
         });
 
-        //console.log(withdraw_spl_tx);
+        let tokenVaultAfter = await provider.connection.getTokenAccountBalance(tokenVault);
+        let receiverAfter = await provider.connection.getTokenAccountBalance(counterPartyToken);
 
+        assert.equal(new anchor.BN(tokenVaultBefore.value.amount).sub(new anchor.BN(tokenVaultAfter.value.amount)).toString(), amount.toString())
+        assert.equal(new anchor.BN(receiverAfter.value.amount).sub(new anchor.BN(receiverBefore.value.amount)).toString(), amount.toString())
+
+    });
+
+    it("check idempotent", async () => {
+        let amount = new anchor.BN(10e6);
+        let now = Date.now();
+        let idempotent = new anchor.BN(now);
+        let deadLine = new anchor.BN((Date.now() / 1000 + 10));
+        await withdrawsSolBySignature(idempotent, deadLine, amount)
+
+        let solVaultBefore = await provider.connection.getBalance(solVault);
+        let receiverBefore = await provider.connection.getBalance(userKeypair.publicKey);
+        try {
+            await withdrawsSolBySignature(idempotent, deadLine, amount)
+        } catch (e) {
+            let solVaultAfter = await provider.connection.getBalance(solVault);
+            let receiverAfter = await provider.connection.getBalance(userKeypair.publicKey);
+            assert.equal(new anchor.BN(solVaultBefore).sub(new anchor.BN(solVaultAfter)).toString(), "0")
+            assert.equal(new anchor.BN(receiverAfter).sub(new anchor.BN(receiverBefore)).toString(), "0")
+        }
+    });
+
+    xit("check deadLine", async () => {
+        let i = 1;
+        let amount = new anchor.BN(10e5);
+        let start = Date.now();
+        let solVaultBefore = await provider.connection.getBalance(solVault);
+        let receiverBefore = await provider.connection.getBalance(userKeypair.publicKey);
+        while (true) {
+            //console.log(i)
+            let now = Date.now();
+            let idempotent = new anchor.BN(now);
+            let deadLine = new anchor.BN((Date.now() / 1000 + 500));
+            try {
+                await withdrawsSolBySignature(idempotent, deadLine, amount)
+            } catch (e) {
+                let solVaultAfter = await provider.connection.getBalance(solVault);
+                let receiverAfter = await provider.connection.getBalance(userKeypair.publicKey);
+                assert.equal(new anchor.BN(solVaultBefore).sub(new anchor.BN(solVaultAfter)).toString(), amount.mul(new anchor.BN(600)).toString())
+                assert.equal(new anchor.BN(receiverAfter).sub(new anchor.BN(receiverBefore)).toString(), amount.mul(new anchor.BN(600)).toString())
+                assert.equal(i, 601)
+                assert.ok(e.toString().indexOf("Withdrawal exceeds maximum processing limit.") > 0)
+                break;
+            }
+            i++
+        }
+        //console.log("cost ",Date.now()-start)
     });
 
     xit("get all address info", async () => {
@@ -540,8 +584,5 @@ describe("cloud-sol-treasury", () => {
 
 
     });
-
-    console.log("字节 ", 8 + 32 + 32 + 32 + 1 + 1 + 1 + (8 + 8) * 600 + 32 + 8 + 1 + 1 + 1, "10k=", 10 * 1024)
-
 
 });
