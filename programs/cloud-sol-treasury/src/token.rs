@@ -68,7 +68,7 @@ pub struct AddToken<'info> {
     /// CHECK:
     #[account(seeds = [constants::TOKEN_VAULT_AUTHORITY.as_bytes(), bank.key().as_ref()], bump)]
     pub token_vault_authority: UncheckedAccount<'info>,
-    #[account(init_if_needed, payer = signer, associated_token::mint = token_mint, associated_token::authority = token_vault_authority,)]
+    #[account(init, payer = signer, associated_token::mint = token_mint, associated_token::authority = token_vault_authority,)]
     pub token_vault: Account<'info, TokenAccount>,
     /// CHECK: We're reading data from this chainlink feed account
     pub price_feed: UncheckedAccount<'info>,
