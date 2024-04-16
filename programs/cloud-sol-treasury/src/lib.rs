@@ -8,7 +8,7 @@ pub mod utils;
 pub mod constants;
 pub mod sol;
 
-use anchor_lang::{prelude::*};
+use anchor_lang::prelude::*;
 use crate::init::*;
 use crate::deposit::*;
 use crate::withdraw::*;

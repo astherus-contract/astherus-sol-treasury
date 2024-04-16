@@ -1,5 +1,5 @@
 use anchor_lang::prelude::msg;
-use num_bigint::{BigUint};
+use num_bigint::BigUint;
 use std::ops::{Div, Mul};
 
 #[test]

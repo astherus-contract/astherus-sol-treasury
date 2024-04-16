@@ -1,4 +1,4 @@
-use anchor_lang::{prelude::*};
+use anchor_lang::prelude::*;
 
 use chainlink_solana as chainlink;
 use crate::errors::ErrorCode;

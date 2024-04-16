@@ -1,4 +1,4 @@
-use anchor_lang::{prelude::*};
+use anchor_lang::prelude::*;
 
 use crate::errors::ErrorCode;
 use crate::events::*;

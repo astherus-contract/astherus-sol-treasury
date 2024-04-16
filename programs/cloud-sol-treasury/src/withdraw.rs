@@ -1,5 +1,5 @@
 use std::ops::{Div, Mul};
-use anchor_lang::{prelude::*};
+use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
     token::{
@@ -11,9 +11,9 @@ use solana_program::instruction::Instruction;
 
 use anchor_lang::solana_program::keccak::hashv as keccak;
 
-use num_bigint::{BigUint};
+use num_bigint::BigUint;
 
-use crate::init::{Admin};
+use crate::init::Admin;
 use crate::token::Bank;
 use crate::sol::SolVault;
 use crate::errors::ErrorCode;
