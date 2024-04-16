@@ -6,7 +6,8 @@ use anchor_spl::{
     },
 };
 
-use crate::init::{Bank, Admin};
+use crate::init::{Admin};
+use crate::token::Bank;
 use crate::errors::ErrorCode;
 use crate::events::*;
 use crate::constants;

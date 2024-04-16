@@ -13,7 +13,8 @@ use anchor_lang::solana_program::keccak::hashv as keccak;
 
 use num_bigint::{BigUint};
 
-use crate::init::{Bank, Admin};
+use crate::init::{Admin};
+use crate::token::Bank;
 use crate::sol::SolVault;
 use crate::errors::ErrorCode;
 use crate::events::*;

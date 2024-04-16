@@ -149,46 +149,10 @@ pub struct Admin {
     pub price_feed_program: Pubkey,
 }
 
-#[account(zero_copy(unsafe))]
-#[derive(Eq, PartialEq, Debug)]
-#[repr(C)]
-pub struct Bank {
-    //8++32+32+32+32+1+1+1+(8+8)*600+32+8+1+1+1=9782<10240
-    pub authority: Pubkey,
-    pub admin: Pubkey,
-    pub token_mint: Pubkey,
-    pub token_vault_authority: Pubkey,
-    pub token_vault_authority_bump: u8,
-    pub enabled: bool,
-    pub claim_history: [ClaimHistoryItem; 600],
-    pub price_feed: Pubkey,
-    pub price: u64,
-    pub fixed_price: bool,
-    pub price_decimals: u8,
-    pub token_decimals: u8,
-}
-
 #[zero_copy(unsafe)]
 #[derive(Debug, Eq, PartialEq)]
 #[repr(C)]
 pub struct ClaimHistoryItem {
     pub idempotent: u64,
     pub dead_line: u64,
-}
-
-impl Bank {
-    pub fn has_claim_history_item(&mut self, idempotent: u64) -> bool {
-        return self.claim_history.iter().find(|item| item.idempotent == idempotent).is_some();
-    }
-
-    pub fn add_claim_history_item(&mut self, idempotent: u64, dead_line: u64, current_timestamp: u64) -> bool {
-        for item in self.claim_history.iter_mut() {
-            if item.dead_line <= (current_timestamp - 120) {
-                item.dead_line = dead_line;
-                item.idempotent = idempotent;
-                return true;
-            }
-        }
-        return false;
-    }
 }
