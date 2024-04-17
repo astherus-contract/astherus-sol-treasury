@@ -1,4 +1,4 @@
-import {getOrCreateKeypair, createKeypair} from "./utils";
+import {getOrCreateKeypair, createKeypair, getKeypair, saveKeypair} from "./utils";
 import {Ed25519Program, PublicKey} from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {Program} from "@coral-xyz/anchor";
@@ -42,7 +42,11 @@ let counterPartyToken;
 export async function loadProvider() {
     provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
-    programWallet = (provider.wallet as anchor.Wallet).payer;
+    programWallet = getKeypair(process.env.ANCHOR, 'programWallet');
+    if (programWallet == null) {
+        programWallet = (provider.wallet as anchor.Wallet).payer;
+        saveKeypair(process.env.ANCHOR, 'programWallet', programWallet);
+    }
     program = anchor.workspace.CloudSolTreasury as Program<CloudSolTreasury>;
     console.log(program.programId)
 }
@@ -213,7 +217,7 @@ export async function addToken() {
 }
 
 export async function depositSOL() {
-    const amount = new anchor.BN(25 * anchor.web3.LAMPORTS_PER_SOL);
+    const amount = new anchor.BN(25);
     let solVaultBefore = await provider.connection.getBalance(solVault);
     let depositorBefore = await provider.connection.getBalance(walletKeypair.publicKey);
 
@@ -233,7 +237,7 @@ export async function depositSOL() {
 }
 
 export async function withdrawSOL() {
-    let amount = new anchor.BN(10 * anchor.web3.LAMPORTS_PER_SOL);
+    let amount = new anchor.BN(10);
     let solVaultBefore = await provider.connection.getBalance(solVault);
     let receiverBefore = await provider.connection.getBalance(userKeypair.publicKey);
 
@@ -340,7 +344,7 @@ export async function depositToken() {
     let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
     let depositorBefore = await provider.connection.getTokenAccountBalance(userToken);
 
-    let deposit_spl_tx = await program.methods.depositSpl(amount).accounts(
+    let deposit_token_tx = await program.methods.depositToken(amount).accounts(
         {
             signer: walletKeypair.publicKey,
             admin: admin,
@@ -369,7 +373,7 @@ export async function withdrawToken() {
     let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
     let receiverBefore = await provider.connection.getTokenAccountBalance(userToken);
 
-    let withdraw_spl_tx = await program.methods.withdrawSpl(amount, new anchor.BN(Date.now() + 10 * 1000), new anchor.BN(Date.now())).accounts({
+    let withdraw_token_tx = await program.methods.withdrawToken(amount, new anchor.BN(Date.now() + 10 * 1000), new anchor.BN(Date.now())).accounts({
         signer: walletKeypair.publicKey,
         admin: admin,
         bank: bankKeypair.publicKey,
@@ -426,7 +430,7 @@ export async function withdrawTokenBySignature() {
     const isValid = await ed.verify(signatureUint8Array, messageHashUint8Array, publicKey);
     assert.ok(isValid)
 
-    let withdraw_spl_tx = await program.methods.withdrawSplBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array).toJSON().data).accounts({
+    let withdraw_token_tx = await program.methods.withdrawTokenBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array).toJSON().data).accounts({
         signer: walletKeypair.publicKey,
         admin: admin,
         bank: bankKeypair.publicKey,
@@ -459,13 +463,13 @@ export async function withdrawSOLBySignature() {
     let now = Date.now();
     let idempotent = new anchor.BN(now);
     let deadLine = new anchor.BN((Date.now() / 1000 + 10));
-    let amount = new anchor.BN(10e6);
+    let amount = new anchor.BN(10);
 
     await doWithdrawSolBySignature(idempotent, deadLine, amount)
 }
 
 export async function withdrawSOLToCounterParty() {
-    let amount = new anchor.BN(1 * anchor.web3.LAMPORTS_PER_SOL);
+    let amount = new anchor.BN(1);
     let solVaultBefore = await provider.connection.getBalance(solVault);
     let receiverBefore = await provider.connection.getBalance(counterPartyKeypair.publicKey);
 
@@ -491,7 +495,7 @@ export async function withdrawTokenToCounterParty() {
     let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
     let receiverBefore = await provider.connection.getTokenAccountBalance(counterPartyToken);
 
-    let withdraw_spl_tx = await program.methods.withdrawSplToCounterParty(amount).accounts({
+    let withdraw_token_tx = await program.methods.withdrawTokenToCounterParty(amount).accounts({
         signer: operatorKeypair.publicKey,
         admin: admin,
         bank: bankKeypair.publicKey,
@@ -540,7 +544,7 @@ async function doWithdrawSolBySignature(idempotent: anchor.BN, deadLine: anchor.
     const isValid = await ed.verify(signatureUint8Array, messageHashUint8Array, publicKey);
     assert.ok(isValid)
 
-    let withdraw_spl_tx = await program.methods.withdrawSolBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array).toJSON().data).accounts({
+    let withdraw_token_tx = await program.methods.withdrawSolBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array).toJSON().data).accounts({
         signer: walletKeypair.publicKey,
         admin: admin,
         solVault: solVault,

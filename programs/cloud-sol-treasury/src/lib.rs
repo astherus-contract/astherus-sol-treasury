@@ -70,8 +70,8 @@ pub mod cloud_sol_treasury {
         return deposit::deposit_sol(ctx, amount);
     }
 
-    pub fn deposit_spl(ctx: Context<DepositSpl>, amount: u64) -> Result<()> {
-        return deposit::deposit_spl(ctx, amount);
+    pub fn deposit_token(ctx: Context<DepositToken>, amount: u64) -> Result<()> {
+        return deposit::deposit_token(ctx, amount);
     }
 
     pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64, dead_line: u64, idempotent: u64) -> Result<()> {
@@ -86,16 +86,16 @@ pub mod cloud_sol_treasury {
         return withdraw::withdraw_sol_to_counter_party(ctx, amount);
     }
 
-    pub fn withdraw_spl(ctx: Context<WithdrawSpl>, amount: u64, dead_line: u64, idempotent: u64) -> Result<()> {
-        return withdraw::withdraw_spl(ctx, amount, dead_line, idempotent);
+    pub fn withdraw_token(ctx: Context<WithdrawToken>, amount: u64, dead_line: u64, idempotent: u64) -> Result<()> {
+        return withdraw::withdraw_token(ctx, amount, dead_line, idempotent);
     }
 
-    pub fn withdraw_spl_by_signature(ctx: Context<WithdrawSplBySignature>, amount: u64, dead_line: u64, idempotent: u64, signature: [u8; 64]) -> Result<()> {
-        return withdraw::withdraw_spl_by_signature(ctx, amount, dead_line, idempotent, signature);
+    pub fn withdraw_token_by_signature(ctx: Context<WithdrawTokenBySignature>, amount: u64, dead_line: u64, idempotent: u64, signature: [u8; 64]) -> Result<()> {
+        return withdraw::withdraw_token_by_signature(ctx, amount, dead_line, idempotent, signature);
     }
 
-    pub fn withdraw_spl_to_counter_party(ctx: Context<WithdrawSplToCounterParty>, amount: u64) -> Result<()> {
-        return withdraw::withdraw_spl_to_counter_party(ctx, amount);
+    pub fn withdraw_token_to_counter_party(ctx: Context<WithdrawTokenToCounterParty>, amount: u64) -> Result<()> {
+        return withdraw::withdraw_token_to_counter_party(ctx, amount);
     }
 }
 

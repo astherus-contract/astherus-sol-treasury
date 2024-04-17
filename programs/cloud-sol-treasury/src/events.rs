@@ -85,7 +85,7 @@ pub struct DepositSolEvent {
 }
 
 #[event]
-pub struct DepositSplEvent {
+pub struct DepositTokenEvent {
     pub token_mint: Pubkey,
     pub bank: Pubkey,
     pub from: Pubkey,
@@ -112,7 +112,7 @@ pub struct WithdrawSolToCounterPartyEvent {
 }
 
 #[event]
-pub struct WithdrawSplEvent {
+pub struct WithdrawTokenEvent {
     pub token_mint: Pubkey,
     pub bank: Pubkey,
     pub from: Pubkey,
@@ -123,7 +123,7 @@ pub struct WithdrawSplEvent {
 }
 
 #[event]
-pub struct TransferSplToCounterPartyEvent {
+pub struct TransferTokenToCounterPartyEvent {
     pub token_mint: Pubkey,
     pub bank: Pubkey,
     pub from: Pubkey,

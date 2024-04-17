@@ -92,7 +92,7 @@ describe("cloud-sol-treasury", () => {
         const isValid = await ed.verify(signatureUint8Array, messageHashUint8Array, publicKey);
         assert.ok(isValid)
 
-        let withdraw_spl_tx = await program.methods.withdrawSolBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array).toJSON().data).accounts({
+        let withdraw_token_tx = await program.methods.withdrawSolBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array).toJSON().data).accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             solVault: solVault,
@@ -345,12 +345,12 @@ describe("cloud-sol-treasury", () => {
         // console.log("program.account.admin.all",result);
     });
 
-    it("Deposits SPL Token", async () => {
+    it("Deposits Token", async () => {
         let amount = new anchor.BN(25e6);
         let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
         let depositorBefore = await provider.connection.getTokenAccountBalance(userToken);
 
-        let deposit_spl_tx = await program.methods.depositSpl(amount).accounts(
+        let deposit_token_tx = await program.methods.depositToken(amount).accounts(
             {
                 signer: walletKeypair.publicKey,
                 admin: admin,
@@ -374,12 +374,12 @@ describe("cloud-sol-treasury", () => {
 
     });
 
-    it("Withdraws SPL Token", async () => {
+    it("Withdraws Token", async () => {
         let amount = new anchor.BN(1e6);
         let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
         let receiverBefore = await provider.connection.getTokenAccountBalance(userToken);
 
-        let withdraw_spl_tx = await program.methods.withdrawSpl(amount, new anchor.BN(Date.now() + 10 * 1000), new anchor.BN(Date.now())).accounts({
+        let withdraw_token_tx = await program.methods.withdrawToken(amount, new anchor.BN(Date.now() + 10 * 1000), new anchor.BN(Date.now())).accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             bank: bankKeypair.publicKey,
@@ -402,7 +402,7 @@ describe("cloud-sol-treasury", () => {
 
     });
 
-    it("Withdraws SPL Token BY signature", async () => {
+    it("Withdraws Token BY signature", async () => {
         let now = Date.now();
         let idempotent = new anchor.BN(now);
         let deadLine = new anchor.BN((Date.now() / 1000 + 10));
@@ -436,7 +436,7 @@ describe("cloud-sol-treasury", () => {
         const isValid = await ed.verify(signatureUint8Array, messageHashUint8Array, publicKey);
         assert.ok(isValid)
 
-        let withdraw_spl_tx = await program.methods.withdrawSplBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array).toJSON().data).accounts({
+        let withdraw_token_tx = await program.methods.withdrawTokenBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array).toJSON().data).accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             bank: bankKeypair.publicKey,
@@ -497,12 +497,12 @@ describe("cloud-sol-treasury", () => {
 
     });
 
-    it("Withdraws SPL Token To Counter Party", async () => {
+    it("Withdraws Token To Counter Party", async () => {
         let amount = new anchor.BN(1e6);
         let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
         let receiverBefore = await provider.connection.getTokenAccountBalance(counterPartyToken);
 
-        let withdraw_spl_tx = await program.methods.withdrawSplToCounterParty(amount).accounts({
+        let withdraw_token_tx = await program.methods.withdrawTokenToCounterParty(amount).accounts({
             signer: operatorKeypair.publicKey,
             admin: admin,
             bank: bankKeypair.publicKey,

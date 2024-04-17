@@ -49,7 +49,7 @@ pub fn deposit_sol(ctx: Context<DepositSol>, amount: u64) -> Result<()> {
     Ok(())
 }
 
-pub fn deposit_spl(ctx: Context<DepositSpl>, amount: u64) -> Result<()> {
+pub fn deposit_token(ctx: Context<DepositToken>, amount: u64) -> Result<()> {
     let bank = &ctx.accounts.bank.load()?;
     if !bank.enabled {
         return Err(ErrorCode::DepositAndWithdrawalDisabled.into());
@@ -68,7 +68,7 @@ pub fn deposit_spl(ctx: Context<DepositSpl>, amount: u64) -> Result<()> {
 
     anchor_spl::token::transfer(cpi, amount)?;
 
-    emit!(DepositSplEvent{
+    emit!(DepositTokenEvent{
         token_mint: bank.token_mint,
         bank: ctx.accounts.bank.key(),
         from: ctx.accounts.depositor.key(),
@@ -92,7 +92,7 @@ pub struct DepositSol<'info> {
 }
 
 #[derive(Accounts)]
-pub struct DepositSpl<'info> {
+pub struct DepositToken<'info> {
     #[account()]
     pub signer: Signer<'info>,
     #[account()]

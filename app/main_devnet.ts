@@ -20,6 +20,11 @@ import {
     withdrawTokenToCounterParty,
 } from './cloud-sol-treasury';
 
+const process = require("process");
+process.env.ANCHOR_WALLET = '/Users/user/.config/solana/id.json'
+process.env.ANCHOR_PROVIDER_URL = 'https://api.devnet.solana.com'
+process.env.ANCHOR = 'dev'
+
 async function main() {
     console.log("Let's start...");
     await loadProvider();

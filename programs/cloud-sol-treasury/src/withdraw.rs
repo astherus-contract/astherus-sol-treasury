@@ -134,7 +134,7 @@ fn do_withdraw_sol<'info>(signer: &Signer<'info>,
             amount: amount,
             idempotent:idempotent
         });
-        //todo 不应该抛出异常
+        //不应该抛出异常
         //return Err(ErrorCode::WithdrawalExceedsLimit.into());
         return Ok(());
     }
@@ -183,7 +183,7 @@ pub fn withdraw_sol_to_counter_party(ctx: Context<WithdrawSolToCounterParty>, am
 }
 
 //钱包发起交易上链
-pub fn withdraw_spl(ctx: Context<WithdrawSpl>, amount: u64, dead_line: u64, idempotent: u64) -> Result<()> {
+pub fn withdraw_token(ctx: Context<WithdrawToken>, amount: u64, dead_line: u64, idempotent: u64) -> Result<()> {
     {
         let admin = ctx.accounts.admin.load()?;
         let bank = ctx.accounts.bank.load()?;
@@ -193,25 +193,25 @@ pub fn withdraw_spl(ctx: Context<WithdrawSpl>, amount: u64, dead_line: u64, idem
         }
     }
 
-    do_withdraw_spl(&ctx.accounts.signer,
-                    &ctx.accounts.admin,
-                    &ctx.accounts.bank,
-                    &ctx.accounts.token_vault_authority,
-                    &ctx.accounts.token_vault,
-                    &ctx.accounts.receiver,
-                    &ctx.accounts.price_feed,
-                    &ctx.accounts.price_feed_program,
-                    &ctx.accounts.token_program,
-                    amount,
-                    dead_line,
-                    idempotent,
+    do_withdraw_token(&ctx.accounts.signer,
+                      &ctx.accounts.admin,
+                      &ctx.accounts.bank,
+                      &ctx.accounts.token_vault_authority,
+                      &ctx.accounts.token_vault,
+                      &ctx.accounts.receiver,
+                      &ctx.accounts.price_feed,
+                      &ctx.accounts.price_feed_program,
+                      &ctx.accounts.token_program,
+                      amount,
+                      dead_line,
+                      idempotent,
     )?;
 
     Ok(())
 }
 
 //钱包签名消息，用户发起交易上链
-pub fn withdraw_spl_by_signature(ctx: Context<WithdrawSplBySignature>, amount: u64, dead_line: u64, idempotent: u64, signature: [u8; 64]) -> Result<()> {
+pub fn withdraw_token_by_signature(ctx: Context<WithdrawTokenBySignature>, amount: u64, dead_line: u64, idempotent: u64, signature: [u8; 64]) -> Result<()> {
     {
         let admin = ctx.accounts.admin.load()?;
         let bank = ctx.accounts.bank.load()?;
@@ -240,32 +240,32 @@ pub fn withdraw_spl_by_signature(ctx: Context<WithdrawSplBySignature>, amount: u
         utils::verify_ed25519_ix(&ix, admin.truth_holder.as_ref(), &msg_hash, &signature)?;
     }
 
-    do_withdraw_spl(&ctx.accounts.signer,
-                    &ctx.accounts.admin,
-                    &ctx.accounts.bank,
-                    &ctx.accounts.token_vault_authority,
-                    &ctx.accounts.token_vault,
-                    &ctx.accounts.receiver,
-                    &ctx.accounts.price_feed,
-                    &ctx.accounts.price_feed_program,
-                    &ctx.accounts.token_program,
-                    amount,
-                    dead_line,
-                    idempotent,
+    do_withdraw_token(&ctx.accounts.signer,
+                      &ctx.accounts.admin,
+                      &ctx.accounts.bank,
+                      &ctx.accounts.token_vault_authority,
+                      &ctx.accounts.token_vault,
+                      &ctx.accounts.receiver,
+                      &ctx.accounts.price_feed,
+                      &ctx.accounts.price_feed_program,
+                      &ctx.accounts.token_program,
+                      amount,
+                      dead_line,
+                      idempotent,
     )?;
     Ok(())
 }
 
-fn do_withdraw_spl<'info>(signer: &Signer<'info>,
-                          admin: &AccountLoader<'info, Admin>,
-                          bank: &AccountLoader<'info, Bank>,
-                          token_vault_authority: &UncheckedAccount<'info>,
-                          token_vault: &Account<'info, TokenAccount>,
-                          receiver: &Account<'info, TokenAccount>,
-                          price_feed: &UncheckedAccount<'info>,
-                          price_feed_program: &UncheckedAccount<'info>,
-                          token_program: &Program<'info, Token>,
-                          amount: u64, dead_line: u64, idempotent: u64) -> Result<()> {
+fn do_withdraw_token<'info>(signer: &Signer<'info>,
+                            admin: &AccountLoader<'info, Admin>,
+                            bank: &AccountLoader<'info, Bank>,
+                            token_vault_authority: &UncheckedAccount<'info>,
+                            token_vault: &Account<'info, TokenAccount>,
+                            receiver: &Account<'info, TokenAccount>,
+                            price_feed: &UncheckedAccount<'info>,
+                            price_feed_program: &UncheckedAccount<'info>,
+                            token_program: &Program<'info, Token>,
+                            amount: u64, dead_line: u64, idempotent: u64) -> Result<()> {
     let bank_pubkey = bank.key();
     let admin = &mut admin.load_mut()?;
     let bank = &mut bank.load_mut()?;
@@ -301,7 +301,7 @@ fn do_withdraw_spl<'info>(signer: &Signer<'info>,
             amount: amount,
             idempotent:idempotent
         });
-        //todo 不应该抛出异常
+        // 不应该抛出异常
         //return Err(ErrorCode::WithdrawalExceedsLimit.into());
         return Ok(());
     }
@@ -331,7 +331,7 @@ fn do_withdraw_spl<'info>(signer: &Signer<'info>,
     admin.claim_per_hour_cursor = cursor;
     admin.claim_per_hour_value = per_hour_value;
 
-    emit!(WithdrawSplEvent{
+    emit!(WithdrawTokenEvent{
      token_mint: bank.token_mint,
      bank: bank_pubkey,
      from: token_vault.key(),
@@ -344,7 +344,7 @@ fn do_withdraw_spl<'info>(signer: &Signer<'info>,
     Ok(())
 }
 
-pub fn withdraw_spl_to_counter_party(ctx: Context<WithdrawSplToCounterParty>, amount: u64) -> Result<()> {
+pub fn withdraw_token_to_counter_party(ctx: Context<WithdrawTokenToCounterParty>, amount: u64) -> Result<()> {
     let bank = &ctx.accounts.bank.load()?;
 
     require!(amount > 0, ErrorCode::ZeroAmount);
@@ -374,7 +374,7 @@ pub fn withdraw_spl_to_counter_party(ctx: Context<WithdrawSplToCounterParty>, am
 
     anchor_spl::token::transfer(cpi, amount)?;
 
-    emit!(TransferSplToCounterPartyEvent{
+    emit!(TransferTokenToCounterPartyEvent{
      token_mint: bank.token_mint,
      bank: ctx.accounts.bank.key(),
      from: ctx.accounts.token_vault.key(),
@@ -461,7 +461,7 @@ pub struct WithdrawSolToCounterParty<'info> {
 }
 
 #[derive(Accounts)]
-pub struct WithdrawSpl<'info> {
+pub struct WithdrawToken<'info> {
     #[account()]
     pub signer: Signer<'info>,
     #[account(mut, constraint = admin.load() ?.authority == * signer.key,)]
@@ -490,7 +490,7 @@ pub struct WithdrawSpl<'info> {
 }
 
 #[derive(Accounts)]
-pub struct WithdrawSplToCounterParty<'info> {
+pub struct WithdrawTokenToCounterParty<'info> {
     #[account()]
     pub signer: Signer<'info>,
     #[account(mut, constraint = admin.load() ?.operator == * signer.key)]
@@ -514,7 +514,7 @@ pub struct WithdrawSplToCounterParty<'info> {
 }
 
 #[derive(Accounts)]
-pub struct WithdrawSplBySignature<'info> {
+pub struct WithdrawTokenBySignature<'info> {
     #[account()]
     pub signer: Signer<'info>,
     #[account(mut, has_one = price_feed_program)]

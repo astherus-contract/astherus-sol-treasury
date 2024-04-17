@@ -9,6 +9,9 @@ cloud-sol-treasury
 
 # 切换网络
 solana config set -url devnet
+solana config set --url https://api.devnet.solana.com
+
+
 
 solana config set -url localhost
 
@@ -17,3 +20,9 @@ solana-test-validator
 
 # 不重新启动本地节点
 anchor test --skip-local-validator
+
+
+solana balance
+
+program id
+8vDBbPQYPX3Q6CKKsdFkhNv4TtGDk3fBwkT3LsdukbSv
