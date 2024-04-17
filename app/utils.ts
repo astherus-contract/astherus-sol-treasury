@@ -1,10 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-
 import fs from 'mz/fs';
 import path from 'path';
-import {Keypair} from '@solana/web3.js';
+import {Keypair, PublicKey} from '@solana/web3.js';
 import * as anchor from "@coral-xyz/anchor";
 
 export function getKeypair(
@@ -14,7 +10,6 @@ export function getKeypair(
     let filePath = path.resolve(
         './app/secret', env, type + '-keypair.json'
     )
-
     let secretKeyString = ''
     try {
         secretKeyString = fs.readFileSync(filePath, {encoding: 'utf8'});
@@ -24,9 +19,15 @@ export function getKeypair(
         }
         throw e;
     }
+    const secretKey = Uint8Array.from(JSON.parse(secretKeyString));
+    let keypair = Keypair.fromSecretKey(secretKey);
 
-    const secretKey = Buffer.from(secretKeyString, 'hex');
-    return Keypair.fromSecretKey(secretKey);
+    filePath = path.resolve(
+        './app/secret', env, type + '-publicKey.json'
+    )
+    fs.writeFileSync(filePath, keypair.publicKey.toBase58());
+
+    return keypair
 }
 
 export function getOrCreateKeypair(
@@ -48,11 +49,24 @@ export function getOrCreateKeypair(
 
     if (secretKeyString == '') {
         const keypair = anchor.web3.Keypair.generate();
-        fs.writeFileSync(filePath, Buffer.from(keypair.secretKey).toString('hex'));
+        fs.writeFileSync(filePath, '[' + keypair.secretKey + ']');
+
+        filePath = path.resolve(
+            './app/secret', env, type + '-publicKey.json'
+        )
+        fs.writeFileSync(filePath, keypair.publicKey.toBase58());
+
         return keypair;
     }
-    const secretKey = Buffer.from(secretKeyString, 'hex');
-    return Keypair.fromSecretKey(secretKey);
+    const secretKey = Uint8Array.from(JSON.parse(secretKeyString));
+    let keypair = Keypair.fromSecretKey(secretKey);
+
+    filePath = path.resolve(
+        './app/secret', env, type + '-publicKey.json'
+    )
+    fs.writeFileSync(filePath, keypair.publicKey.toBase58());
+
+    return keypair
 }
 
 export function createKeypair(
@@ -63,7 +77,13 @@ export function createKeypair(
         './app/secret', env, type + '-keypair.json'
     )
     const keypair = anchor.web3.Keypair.generate();
-    fs.writeFileSync(filePath, Buffer.from(keypair.secretKey).toString('hex'));
+    fs.writeFileSync(filePath, '[' + keypair.secretKey + ']');
+
+    filePath = path.resolve(
+        './app/secret', env, type + '-publicKey.json'
+    )
+    fs.writeFileSync(filePath, keypair.publicKey.toBase58());
+
     return keypair;
 }
 
@@ -75,5 +95,22 @@ export function saveKeypair(
     let filePath = path.resolve(
         './app/secret', env, type + '-keypair.json'
     )
-    fs.writeFileSync(filePath, Buffer.from(keypair.secretKey).toString('hex'));
+    fs.writeFileSync(filePath, '[' + keypair.secretKey + ']');
+
+    filePath = path.resolve(
+        './app/secret', env, type + '-publicKey.json'
+    )
+    fs.writeFileSync(filePath, keypair.publicKey.toBase58());
+}
+
+
+export function savePublicKey(
+    env: string,
+    type: string,
+    publicKey: PublicKey
+) {
+    let filePath = path.resolve(
+        './app/secret', env, type + '-publicKey.json'
+    )
+    fs.writeFileSync(filePath, publicKey.toBase58());
 }

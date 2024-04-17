@@ -1,4 +1,4 @@
-import {getOrCreateKeypair, createKeypair, getKeypair, saveKeypair} from "./utils";
+import {getOrCreateKeypair, createKeypair, getKeypair, saveKeypair, savePublicKey} from "./utils";
 import {Ed25519Program, PublicKey} from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {Program} from "@coral-xyz/anchor";
@@ -83,17 +83,21 @@ export async function loadKeypair() {
         [anchor.utils.bytes.utf8.encode("admin")
         ],
         program.programId);
+    savePublicKey(process.env.ANCHOR, 'admin', admin);
 
     [tokenVaultAuthority, token_vault_authority_bump] = anchor.web3.PublicKey.findProgramAddressSync(
         [anchor.utils.bytes.utf8.encode("token_vault_authority"),
             bankKeypair.publicKey.toBuffer()
         ],
         program.programId);
+    savePublicKey(process.env.ANCHOR, 'tokenVaultAuthority', tokenVaultAuthority);
+
 
     [solVault, sol_vault_bump] = anchor.web3.PublicKey.findProgramAddressSync(
         [anchor.utils.bytes.utf8.encode("sol_vault"), admin.toBuffer()
         ],
         program.programId);
+    savePublicKey(process.env.ANCHOR, 'solVault', solVault);
 }
 
 

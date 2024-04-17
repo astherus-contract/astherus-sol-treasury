@@ -26,3 +26,6 @@ solana balance
 
 program id
 8vDBbPQYPX3Q6CKKsdFkhNv4TtGDk3fBwkT3LsdukbSv
+
+
+solana transfer --from /Users/user/.config/solana/id.json 3Tw6dkrzSJx66jwX4evf9GoNXvnVv8dbMk2tjH9GsA8K 2 --allow-unfunded-recipient --url https://api.devnet.solana.com --fee-payer /Users/user/.config/solana/id.json
