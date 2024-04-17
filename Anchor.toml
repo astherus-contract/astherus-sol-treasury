@@ -4,8 +4,11 @@
 seeds = false
 skip-lint = false
 
+[programs.devnet]
+cloud_sol_treasury = "8vDBbPQYPX3Q6CKKsdFkhNv4TtGDk3fBwkT3LsdukbSv"
+
 [programs.localnet]
-cloud_sol_treasury = "CEbZve3kn48J3sdsNhiET35d93F5ydCEbgEVKCLr6oGX"
+cloud_sol_treasury = "8vDBbPQYPX3Q6CKKsdFkhNv4TtGDk3fBwkT3LsdukbSv"
 
 [registry]
 url = "https://api.apr.dev"

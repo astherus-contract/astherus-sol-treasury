@@ -2,7 +2,10 @@
     "scripts": {
         "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
         "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
-        "start": "ts-node app/main.ts",
+        "start:localnet": "ts-node app/main_localnet.ts",
+        "start": "ts-node app/main_localnet.ts",
+        "start:devnet": "ts-node app/main_devnet.ts",
+        "start:testnet": "ts-node app/main_testnet.ts",
         "test": "ts-mocha tests/Ed25519.ts"
     },
     "dependencies": {

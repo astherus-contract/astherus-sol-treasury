@@ -28,8 +28,11 @@ describe("cloud-sol-treasury", () => {
 
     const program = anchor.workspace.CloudSolTreasury as Program<CloudSolTreasury>;
 
+    //const bankKeypair = anchor.web3.Keypair.fromSeed(Buffer.from("bankKeypair").valueOf());
     const bankKeypair = anchor.web3.Keypair.generate();
+
     const walletKeypair = anchor.web3.Keypair.generate();
+
     //const walletKeypair = programWallet;
     const counterPartyKeypair = anchor.web3.Keypair.generate();
     const operatorKeypair = anchor.web3.Keypair.generate();
@@ -89,7 +92,7 @@ describe("cloud-sol-treasury", () => {
         const isValid = await ed.verify(signatureUint8Array, messageHashUint8Array, publicKey);
         assert.ok(isValid)
 
-        let withdraw_spl_tx = await program.methods.withdrawSolBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array)).accounts({
+        let withdraw_spl_tx = await program.methods.withdrawSolBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array).toJSON().data).accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             solVault: solVault,
@@ -98,11 +101,11 @@ describe("cloud-sol-treasury", () => {
             priceFeedProgram: priceFeedProgram,
             systemProgram: anchor.web3.SystemProgram.programId,
             ixSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
-        }).preInstructions(Ed25519Program.createInstructionWithPublicKey({
+        }).preInstructions([Ed25519Program.createInstructionWithPublicKey({
             publicKey: publicKey,
             message: messageHashUint8Array,
             signature: signatureUint8Array,
-        })).signers([walletKeypair]).rpc()
+        })]).signers([walletKeypair]).rpc()
         // .catch(e => console.error(e))
 
         let solVaultAfter = await provider.connection.getBalance(solVault);
@@ -177,7 +180,7 @@ describe("cloud-sol-treasury", () => {
     });
 
     it("Is add sol", async () => {
-        const tx = await program.methods.addSol(true, sol_vault_bump, new anchor.BN(1e6), true, new anchor.BN(6), new anchor.BN(9))
+        const tx = await program.methods.addSol(true, sol_vault_bump, new anchor.BN(1e6), true, 6, 9)
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
@@ -189,7 +192,7 @@ describe("cloud-sol-treasury", () => {
     });
 
     it("Is add token", async () => {
-        const tx = await program.methods.addToken(true, token_vault_authority_bump, new anchor.BN(1e6), true, new anchor.BN(6), new anchor.BN(6))
+        const tx = await program.methods.addToken(true, token_vault_authority_bump, new anchor.BN(1e6), true, 6, 6)
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
@@ -433,7 +436,7 @@ describe("cloud-sol-treasury", () => {
         const isValid = await ed.verify(signatureUint8Array, messageHashUint8Array, publicKey);
         assert.ok(isValid)
 
-        let withdraw_spl_tx = await program.methods.withdrawSplBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array)).accounts({
+        let withdraw_spl_tx = await program.methods.withdrawSplBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array).toJSON().data).accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             bank: bankKeypair.publicKey,
@@ -447,11 +450,11 @@ describe("cloud-sol-treasury", () => {
             tokenProgram: TOKEN_PROGRAM_ID,
             systemProgram: anchor.web3.SystemProgram.programId,
             ixSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
-        }).preInstructions(Ed25519Program.createInstructionWithPublicKey({
+        }).preInstructions([Ed25519Program.createInstructionWithPublicKey({
             publicKey: publicKey,
             message: messageHashUint8Array,
             signature: signatureUint8Array,
-        })).signers([walletKeypair]).rpc()
+        })]).signers([walletKeypair]).rpc()
         // .catch(e => console.error(e))
 
         let tokenVaultAfter = await provider.connection.getTokenAccountBalance(tokenVault);
