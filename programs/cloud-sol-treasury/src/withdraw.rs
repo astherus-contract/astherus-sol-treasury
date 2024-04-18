@@ -58,12 +58,19 @@ pub fn withdraw_sol_by_signature(ctx: Context<WithdrawSolBySignature>, amount: u
 
         let msg_hash = keccak(&[
             idempotent.to_string().as_bytes(),
-            dead_line.to_string().as_bytes(),
-            amount.to_string().as_bytes(),
+            constants::COMMA.as_bytes(),
             &ctx.accounts.admin.key().as_ref(),
+            constants::COMMA.as_bytes(),
+            dead_line.to_string().as_bytes(),
+            constants::COMMA.as_bytes(),
             &ctx.accounts.sol_vault.key().as_ref(),
+            constants::COMMA.as_bytes(),
+            amount.to_string().as_bytes(),
+            constants::COMMA.as_bytes(),
             &ctx.accounts.receiver.key().as_ref(),
+            constants::COMMA.as_bytes(),
             &ctx.accounts.price_feed.key().as_ref(),
+            constants::COMMA.as_bytes(),
             &ctx.accounts.price_feed_program.key().as_ref(),
         ]).to_bytes();
 
@@ -98,6 +105,8 @@ fn do_withdraw_sol<'info>(signer: &Signer<'info>,
 
     let current_timestamp = Clock::get()?.unix_timestamp as u64;
     require!(dead_line > current_timestamp , ErrorCode::AlreadyPassedDeadline);
+    require!(dead_line < (current_timestamp+60*10) , ErrorCode::AlreadyPassedDeadline);
+
     require!(amount > 0, ErrorCode::ZeroAmount);
 
     let sol_vault_account_info = sol_vault_loader.to_account_info();
@@ -222,15 +231,25 @@ pub fn withdraw_token_by_signature(ctx: Context<WithdrawTokenBySignature>, amoun
 
         let msg_hash = keccak(&[
             idempotent.to_string().as_bytes(),
-            dead_line.to_string().as_bytes(),
-            amount.to_string().as_bytes(),
+            constants::COMMA.as_bytes(),
             &ctx.accounts.admin.key().as_ref(),
+            constants::COMMA.as_bytes(),
+            dead_line.to_string().as_bytes(),
+            constants::COMMA.as_bytes(),
             &ctx.accounts.bank.key().as_ref(),
+            constants::COMMA.as_bytes(),
+            amount.to_string().as_bytes(),
+            constants::COMMA.as_bytes(),
             &ctx.accounts.token_vault_authority.key().as_ref(),
+            constants::COMMA.as_bytes(),
             &ctx.accounts.token_vault.key().as_ref(),
+            constants::COMMA.as_bytes(),
             &ctx.accounts.receiver.key().as_ref(),
+            constants::COMMA.as_bytes(),
             &ctx.accounts.price_feed.key().as_ref(),
+            constants::COMMA.as_bytes(),
             &ctx.accounts.price_feed_program.key().as_ref(),
+            constants::COMMA.as_bytes(),
             &ctx.accounts.token_mint.key().as_ref(),
         ]).to_bytes();
 
@@ -273,6 +292,8 @@ fn do_withdraw_token<'info>(signer: &Signer<'info>,
     let current_timestamp = Clock::get()?.unix_timestamp as u64;
 
     require!(dead_line > current_timestamp, ErrorCode::AlreadyPassedDeadline);
+    require!(dead_line < (current_timestamp+60*10) , ErrorCode::AlreadyPassedDeadline);
+
     require!(amount > 0, ErrorCode::ZeroAmount);
     require!(token_vault.amount >= amount, ErrorCode::InsufficientVaultBalance);
     if bank.has_claim_history_item(idempotent) {
@@ -408,7 +429,7 @@ fn amount_to_usd<'a>(fixed_price: bool, price: u64, price_decimals: u8, token_de
 pub struct WithdrawSol<'info> {
     #[account()]
     pub signer: Signer<'info>,
-    #[account(mut, constraint = admin.load() ?.authority == * signer.key)]
+    #[account(mut, constraint = admin.load() ?.authority == * signer.key, has_one = price_feed_program)]
     pub admin: AccountLoader<'info, Admin>,
     #[account(mut, has_one = admin, has_one = price_feed, seeds = [constants::SOL_VAULT.as_bytes(), admin.key().as_ref()], bump = admin.load() ?.sol_vault_bump)]
     pub sol_vault: AccountLoader<'info, SolVault>,
@@ -464,9 +485,9 @@ pub struct WithdrawSolToCounterParty<'info> {
 pub struct WithdrawToken<'info> {
     #[account()]
     pub signer: Signer<'info>,
-    #[account(mut, constraint = admin.load() ?.authority == * signer.key,)]
+    #[account(mut, constraint = admin.load() ?.authority == * signer.key, has_one = price_feed_program)]
     pub admin: AccountLoader<'info, Admin>,
-    #[account(mut, has_one = token_vault_authority, has_one = admin, constraint = bank.load() ?.authority == * signer.key)]
+    #[account(mut, has_one = token_vault_authority, has_one = admin, constraint = bank.load() ?.authority == * signer.key,has_one = price_feed)]
     pub bank: AccountLoader<'info, Bank>,
 
     /// CHECK

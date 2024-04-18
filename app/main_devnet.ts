@@ -31,7 +31,7 @@ async function main() {
     console.log('loadProvider Success');
     await loadKeypair();
     console.log('loadKeypair Success');
-    await requestAirdropAll()
+    //await requestAirdropAll()
     console.log('requestAirdropAll Success');
     await prepareToken()
     console.log('prepareToken Success');

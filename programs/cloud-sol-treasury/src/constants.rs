@@ -11,3 +11,6 @@ pub const ADMIN: &str = "admin";
 
 #[constant]
 pub const USD_DECIMALS: u8 = 8;
+
+#[constant]
+pub const COMMA: &str = ",";

@@ -72,12 +72,19 @@ describe("cloud-sol-treasury", () => {
 
         const msg = Buffer.concat([
             Buffer.from(idempotent.toString()),
-            Buffer.from(deadLine.toString()),
-            Buffer.from(amount.toString()),
+            Buffer.from(","),
             admin.toBytes(),
+            Buffer.from(","),
+            Buffer.from(deadLine.toString()),
+            Buffer.from(","),
             solVault.toBytes(),
+            Buffer.from(","),
+            Buffer.from(amount.toString()),
+            Buffer.from(","),
             userKeypair.publicKey.toBytes(),
+            Buffer.from(","),
             priceFeed.toBytes(),
+            Buffer.from(","),
             priceFeedProgram.toBytes(),
         ])
 
@@ -379,7 +386,7 @@ describe("cloud-sol-treasury", () => {
         let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
         let receiverBefore = await provider.connection.getTokenAccountBalance(userToken);
 
-        let withdraw_token_tx = await program.methods.withdrawToken(amount, new anchor.BN(Date.now() + 10 * 1000), new anchor.BN(Date.now())).accounts({
+        let withdraw_token_tx = await program.methods.withdrawToken(amount, new anchor.BN(Date.now()/1000 + 10), new anchor.BN(Date.now())).accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             bank: bankKeypair.publicKey,
@@ -413,15 +420,25 @@ describe("cloud-sol-treasury", () => {
 
         const msg = Buffer.concat([
             Buffer.from(idempotent.toString()),
-            Buffer.from(deadLine.toString()),
-            Buffer.from(amount.toString()),
+            Buffer.from(","),
             admin.toBytes(),
+            Buffer.from(","),
+            Buffer.from(deadLine.toString()),
+            Buffer.from(","),
             bankKeypair.publicKey.toBytes(),
+            Buffer.from(","),
+            Buffer.from(amount.toString()),
+            Buffer.from(","),
             tokenVaultAuthority.toBytes(),
+            Buffer.from(","),
             tokenVault.toBytes(),
+            Buffer.from(","),
             userToken.toBytes(),
+            Buffer.from(","),
             priceFeed.toBytes(),
+            Buffer.from(","),
             priceFeedProgram.toBytes(),
+            Buffer.from(","),
             mint.publicKey.toBytes()
         ])
 
