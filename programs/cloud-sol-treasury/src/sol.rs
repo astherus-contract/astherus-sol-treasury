@@ -33,6 +33,11 @@ pub fn add_sol(ctx: Context<AddSol>, enabled: bool, sol_vault_bump: u8, price: u
         admin: ctx.accounts.admin.key(),
     });
 
+    msg!("AddSolEvent:solVault={},admin={}",
+            ctx.accounts.sol_vault.key().to_string(),
+            ctx.accounts.admin.key().to_string(),
+    );
+
     Ok(())
 }
 
@@ -45,6 +50,11 @@ pub fn update_sol_enabled(ctx: Context<UpdateSolEnabled>, enabled: bool) -> Resu
         old_enabled : old_enabled,
         new_enabled : enabled,
     });
+
+    msg!("UpdateSolEnabledEvent:oldEnabled={},newEnabled={}",
+        old_enabled,
+        enabled,
+    );
 
     Ok(())
 }

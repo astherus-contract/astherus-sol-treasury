@@ -2,7 +2,6 @@ use anchor_lang::prelude::*;
 
 #[event]
 pub struct InitializeEvent {
-    pub authority: Pubkey,
     pub global_withdraw_enabled: bool,
     pub hourly_limit: u64,
     pub init: bool,
@@ -101,6 +100,7 @@ pub struct WithdrawSolEvent {
     pub signer: Pubkey,
     pub amount: u64,
     pub idempotent: u64,
+    pub dead_line: u64,
 }
 
 #[event]
@@ -138,4 +138,5 @@ pub struct ClaimPausedEvent {
     pub to: Pubkey,
     pub signer: Pubkey,
     pub amount: u64,
+    pub dead_line: u64,
 }

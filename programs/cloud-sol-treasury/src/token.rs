@@ -39,6 +39,11 @@ pub fn add_token(ctx: Context<AddToken>, enabled: bool, token_vault_authority_bu
         bank: ctx.accounts.bank.key(),
     });
 
+    msg!("AddTokenEvent:tokenMint={},bank={}",
+            bank.token_mint.to_string(),
+            ctx.accounts.bank.key().to_string()
+        );
+
     Ok(())
 }
 
@@ -53,6 +58,13 @@ pub fn update_token_enabled(ctx: Context<UpdateTokenEnabled>, enabled: bool) -> 
         old_enabled : old_enabled,
         new_enabled : enabled,
     });
+
+    msg!("UpdateTokenEnabledEvent:tokenMint={},bank={},oldEnabled={},newEnabled={}",
+            bank.token_mint.to_string(),
+            ctx.accounts.bank.key().to_string(),
+            old_enabled,
+            enabled
+    );
 
     Ok(())
 }

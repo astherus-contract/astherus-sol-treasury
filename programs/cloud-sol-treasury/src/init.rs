@@ -21,12 +21,20 @@ pub fn initialize(ctx: Context<Initialize>, global_withdraw_enabled: bool, hourl
         init : true,
         global_withdraw_enabled : global_withdraw_enabled,
         hourly_limit : hourly_limit,
-        authority : ctx.accounts.signer.key(),
         operator : operator,
         counter_party : counter_party,
         truth_holder : truth_holder,
         price_feed_program:price_feed_program
     });
+
+    msg!("InitializeEvent:init=true,globalWithdrawEnabled={},hourlyLimit={},operator={},counterParty={},truthHolder={},priceFeedProgram={}",
+    global_withdraw_enabled,
+        hourly_limit,
+        operator.key().to_string(),
+        counter_party.key().to_string(),
+        truth_holder.key().to_string(),
+        price_feed_program.key().to_string(),
+    );
 
     Ok(())
 }
@@ -41,6 +49,11 @@ pub fn update_global_withdraw_enabled(ctx: Context<UpdateAdmin>, global_withdraw
         new_global_withdraw_enabled : global_withdraw_enabled,
     });
 
+    msg!("UpdateWithdrawEnabledEvent:oldGlobalWithdrawEnabled={},newGlobalWithdrawEnabled={}",
+        old_global_withdraw_enabled,
+        global_withdraw_enabled
+    );
+
     Ok(())
 }
 
@@ -54,6 +67,11 @@ pub fn update_hourly_limit(ctx: Context<UpdateAdmin>, hourly_limit: u64) -> Resu
         new_hourly_limit:hourly_limit
     });
 
+    msg!("UpdateHourlyLimitEvent:oldHourlyLimit={},newHourlyLimit={}",
+        old_hourly_limit,
+        hourly_limit
+    );
+
     Ok(())
 }
 
@@ -65,6 +83,11 @@ pub fn change_operator(ctx: Context<UpdateAdmin>, operator: Pubkey) -> Result<()
         old_operator : old_operator,
         new_operator:operator
     });
+
+    msg!("ChangeOperatorEvent:oldOperator={},newOperator={}",
+        old_operator.key().to_string(),
+        operator.key().to_string(),
+    );
 
     Ok(())
 }
@@ -79,6 +102,11 @@ pub fn change_counter_party(ctx: Context<UpdateAdmin>, counter_party: Pubkey) ->
         new_counter_party:counter_party
     });
 
+    msg!("ChangeCounterPartyEvent:oldCounterParty={},newCounterParty={}",
+        old_counter_party.key().to_string(),
+        counter_party.key().to_string()
+    );
+
     Ok(())
 }
 
@@ -92,6 +120,11 @@ pub fn change_truth_holder(ctx: Context<UpdateAdmin>, truth_holder: Pubkey) -> R
         new_truth_holder:truth_holder
     });
 
+    msg!("ChangeTruthHolderEvent:oldTruthHolder={},newTruthHolder={}",
+        old_truth_holder.key().to_string(),
+        truth_holder.key().to_string()
+    );
+
     Ok(())
 }
 
@@ -104,6 +137,11 @@ pub fn change_price_feed_program(ctx: Context<UpdateAdmin>, price_feed_program: 
         old_price_feed_program : old_price_feed_program,
         new_price_feed_program:price_feed_program
     });
+
+    msg!("ChangePriceFeedProgramEvent:oldPriceFeedProgram={},newPricePeedProgram={}",
+        old_price_feed_program.key().to_string(),
+        price_feed_program.key().to_string()
+    );
 
     Ok(())
 }

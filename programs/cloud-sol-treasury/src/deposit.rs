@@ -46,6 +46,12 @@ pub fn deposit_sol(ctx: Context<DepositSol>, amount: u64) -> Result<()> {
      amount: amount,
     });
 
+    msg!("DepositSolEvent:from={},to={},signer={},amount={}",
+        ctx.accounts.signer.key().to_string(),
+        ctx.accounts.sol_vault.key().to_string(),
+        ctx.accounts.signer.key().to_string(),
+        amount);
+
     Ok(())
 }
 
@@ -76,6 +82,14 @@ pub fn deposit_token(ctx: Context<DepositToken>, amount: u64) -> Result<()> {
         signer: ctx.accounts.signer.key(),
         amount: amount,
     });
+
+    msg!("DepositTokenEvent:token_mint={},bank={},from={},to={},signer={},amount={}",
+        bank.token_mint.to_string(),
+        ctx.accounts.bank.key().to_string(),
+        ctx.accounts.depositor.key().to_string(),
+        ctx.accounts.token_vault.key().to_string(),
+        ctx.accounts.signer.key().to_string(),
+        amount);
 
     Ok(())
 }

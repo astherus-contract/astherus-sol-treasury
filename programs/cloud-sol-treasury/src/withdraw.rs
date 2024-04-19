@@ -141,8 +141,18 @@ fn do_withdraw_sol<'info>(signer: &Signer<'info>,
             to:receiver.key(),
             signer: signer.key(),
             amount: amount,
-            idempotent:idempotent
+            idempotent:idempotent,
+            dead_line:dead_line,
         });
+
+        msg!("ClaimPausedEvent:to={},signer={},amount={},idempotent={},deadLine={}",
+            receiver.key().to_string(),
+            signer.key().to_string(),
+            amount,
+            idempotent,
+            dead_line
+        );
+
         //不应该抛出异常
         //return Err(ErrorCode::WithdrawalExceedsLimit.into());
         return Ok(());
@@ -161,7 +171,16 @@ fn do_withdraw_sol<'info>(signer: &Signer<'info>,
         signer: signer.key(),
         amount: amount,
         idempotent:idempotent,
+        dead_line:dead_line
     });
+
+    msg!("WithdrawSolEvent:from={},to={},signer={},amount={},idempotent={},deadLine={}",
+        sol_vault_loader.key().to_string(),
+        receiver.key().to_string(),
+        signer.key().to_string(),
+        amount,
+        idempotent,
+        dead_line);
 
     Ok(())
 }
@@ -187,6 +206,13 @@ pub fn withdraw_sol_to_counter_party(ctx: Context<WithdrawSolToCounterParty>, am
      signer: ctx.accounts.signer.key(),
      amount: amount,
     });
+
+    msg!("WithdrawSolToCounterPartyEvent:from={},to={},signer={},amount={}",
+        ctx.accounts.sol_vault.key().to_string(),
+        ctx.accounts.receiver.key().to_string(),
+        ctx.accounts.signer.key().to_string(),
+        amount
+    );
 
     Ok(())
 }
@@ -320,8 +346,18 @@ fn do_withdraw_token<'info>(signer: &Signer<'info>,
             to:receiver.key(),
             signer: signer.key(),
             amount: amount,
-            idempotent:idempotent
+            idempotent:idempotent,
+            dead_line:dead_line,
         });
+
+        msg!("ClaimPausedEvent:to={},signer={},amount={},idempotent={},deadLine={}",
+            receiver.key().to_string(),
+            signer.key().to_string(),
+            amount,
+            idempotent,
+            dead_line
+        );
+
         // 不应该抛出异常
         //return Err(ErrorCode::WithdrawalExceedsLimit.into());
         return Ok(());
@@ -361,6 +397,17 @@ fn do_withdraw_token<'info>(signer: &Signer<'info>,
      amount: amount,
      idempotent:idempotent,
     });
+
+    msg!("WithdrawTokenEvent:token_mint={},bank={},from={},to={},signer={},amount={},idempotent={},deadLine={}",
+        bank.token_mint.to_string(),
+        bank_pubkey.to_string(),
+        token_vault.key().to_string(),
+        receiver.key().to_string(),
+        signer.key().to_string(),
+        amount,
+        idempotent,
+        dead_line
+    );
 
     Ok(())
 }
@@ -403,6 +450,15 @@ pub fn withdraw_token_to_counter_party(ctx: Context<WithdrawTokenToCounterParty>
      signer: ctx.accounts.signer.key(),
      amount: amount,
     });
+
+    msg!("TransferTokenToCounterPartyEvent:token_mint={},bank={},from={},to={},signer={},amount={}",
+        bank.token_mint.to_string(),
+        ctx.accounts.bank.key().to_string(),
+        ctx.accounts.token_vault.key().to_string(),
+        ctx.accounts.receiver.key().to_string(),
+        ctx.accounts.signer.key().to_string(),
+        amount
+    );
 
     Ok(())
 }
