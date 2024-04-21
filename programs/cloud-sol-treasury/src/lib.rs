@@ -16,7 +16,7 @@ use crate::token::*;
 use crate::sol::*;
 
 
-declare_id!("8vDBbPQYPX3Q6CKKsdFkhNv4TtGDk3fBwkT3LsdukbSv");
+declare_id!("GerVDHW2N98Y2ssKGSfCwswYC9oF7gDrPHvRxtXek3TG");
 
 #[program]
 pub mod cloud_sol_treasury {
@@ -74,11 +74,11 @@ pub mod cloud_sol_treasury {
         return deposit::deposit_token(ctx, amount);
     }
 
-    pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64, dead_line: u64, idempotent: u64) -> Result<()> {
+    pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64, dead_line: u32, idempotent: u32) -> Result<()> {
         return withdraw::withdraw_sol(ctx, amount, dead_line, idempotent);
     }
 
-    pub fn withdraw_sol_by_signature(ctx: Context<WithdrawSolBySignature>, amount: u64, dead_line: u64, idempotent: u64, signature: [u8; 64]) -> Result<()> {
+    pub fn withdraw_sol_by_signature(ctx: Context<WithdrawSolBySignature>, amount: u64, dead_line: u32, idempotent: u32, signature: [u8; 64]) -> Result<()> {
         return withdraw::withdraw_sol_by_signature(ctx, amount, dead_line, idempotent, signature);
     }
 
@@ -86,11 +86,11 @@ pub mod cloud_sol_treasury {
         return withdraw::withdraw_sol_to_counter_party(ctx, amount);
     }
 
-    pub fn withdraw_token(ctx: Context<WithdrawToken>, amount: u64, dead_line: u64, idempotent: u64) -> Result<()> {
+    pub fn withdraw_token(ctx: Context<WithdrawToken>, amount: u64, dead_line: u32, idempotent: u32) -> Result<()> {
         return withdraw::withdraw_token(ctx, amount, dead_line, idempotent);
     }
 
-    pub fn withdraw_token_by_signature(ctx: Context<WithdrawTokenBySignature>, amount: u64, dead_line: u64, idempotent: u64, signature: [u8; 64]) -> Result<()> {
+    pub fn withdraw_token_by_signature(ctx: Context<WithdrawTokenBySignature>, amount: u64, dead_line: u32, idempotent: u32, signature: [u8; 64]) -> Result<()> {
         return withdraw::withdraw_token_by_signature(ctx, amount, dead_line, idempotent, signature);
     }
 

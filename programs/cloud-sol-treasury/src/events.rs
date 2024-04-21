@@ -99,8 +99,8 @@ pub struct WithdrawSolEvent {
     pub to: Pubkey,
     pub signer: Pubkey,
     pub amount: u64,
-    pub idempotent: u64,
-    pub dead_line: u64,
+    pub idempotent: u32,
+    pub dead_line: u32,
 }
 
 #[event]
@@ -119,7 +119,7 @@ pub struct WithdrawTokenEvent {
     pub to: Pubkey,
     pub signer: Pubkey,
     pub amount: u64,
-    pub idempotent: u64,
+    pub idempotent: u32,
 }
 
 #[event]
@@ -134,9 +134,9 @@ pub struct TransferTokenToCounterPartyEvent {
 
 #[event]
 pub struct ClaimPausedEvent {
-    pub idempotent: u64,
+    pub idempotent: u32,
     pub to: Pubkey,
     pub signer: Pubkey,
     pub amount: u64,
-    pub dead_line: u64,
+    pub dead_line: u32,
 }

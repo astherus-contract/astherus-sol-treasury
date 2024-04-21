@@ -91,9 +91,9 @@ pub struct UpdateSolEnabled<'info> {
 #[derive(Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct SolVault {
-    //8+1+(8+8)*600+32+8+1+1+1=9684<10240
+    //8+1+(4+4)*1200+32+32+8+1+1+1=9684<10240
     pub enabled: bool,
-    pub claim_history: [ClaimHistoryItem; 600],
+    pub claim_history: [ClaimHistoryItem; 1200],
     pub price_feed: Pubkey,
     pub admin: Pubkey,
     pub price: u64,
@@ -102,15 +102,17 @@ pub struct SolVault {
     pub token_decimals: u8,
 }
 
+
 impl SolVault {
-    pub fn has_claim_history_item(&mut self, idempotent: u64) -> bool {
+    pub fn has_claim_history_item(&mut self, idempotent: u32) -> bool {
         return self.claim_history.iter().find(|item| item.idempotent == idempotent).is_some();
     }
 
-    pub fn add_claim_history_item(&mut self, idempotent: u64, dead_line: u64, current_timestamp: u64) -> bool {
+    pub fn add_claim_history_item(&mut self, idempotent: u32, dead_line: u32, current_timestamp: u32) -> bool {
         for item in self.claim_history.iter_mut() {
-            if item.dead_line <= (current_timestamp - 120) {
-                item.dead_line = dead_line;
+            if item.dead_line <= (current_timestamp as u32 - 120) {
+                msg!("RemoveClaimHistoryEvent:idempotent={},deadLine={}",item.idempotent,item.dead_line);
+                item.dead_line = dead_line as u32;
                 item.idempotent = idempotent;
                 return true;
             }

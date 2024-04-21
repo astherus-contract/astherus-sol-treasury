@@ -12,6 +12,8 @@ import {
 } from "@solana/spl-token";
 import assert from "assert";
 import * as ed from "@noble/ed25519";
+import sleep from 'await-sleep'
+
 
 const createKeccakHash = require('keccak')
 
@@ -40,6 +42,12 @@ let userToken;
 let counterPartyToken;
 
 export async function loadProvider() {
+    savePublicKey(process.env.ANCHOR, 'associatedTokenProgram', ASSOCIATED_TOKEN_PROGRAM_ID);
+    savePublicKey(process.env.ANCHOR, 'tokenProgram', TOKEN_PROGRAM_ID);
+    savePublicKey(process.env.ANCHOR, 'systemProgram', anchor.web3.SystemProgram.programId);
+    savePublicKey(process.env.ANCHOR, 'ixSysvar', anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY);
+
+
     provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
     programWallet = getKeypair(process.env.ANCHOR, 'programWallet');
@@ -129,12 +137,19 @@ export async function requestAirdropAll() {
     } catch (e) {
         console.log(e)
     }
+
+    try {
+        await requestAirdrop(counterPartyKeypair.publicKey);
+    } catch (e) {
+        console.log(e)
+    }
 }
 
 export async function prepareToken() {
     try {
         await getMint(provider.connection, mint.publicKey, null, TOKEN_PROGRAM_ID);
     } catch (e) {
+        // console.log(e)
         if (e.toString().indexOf('TokenAccountNotFoundError') >= 0) {
             await createMint(
                 provider.connection,
@@ -148,11 +163,14 @@ export async function prepareToken() {
             );
             let userUsdtTokenAccount = await getOrCreateAssociatedTokenAccount(provider.connection, walletKeypair, mint.publicKey, walletKeypair.publicKey, false, undefined, undefined, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID)
             await mintToChecked(provider.connection, walletKeypair, mint.publicKey, userUsdtTokenAccount.address, usdc_auth, 20000000000000e6, 0, [], undefined, TOKEN_PROGRAM_ID);
+            return
         }
+        throw e;
     }
 
     let userUsdtTokenAccount = await getOrCreateAssociatedTokenAccount(provider.connection, walletKeypair, mint.publicKey, walletKeypair.publicKey, false, undefined, undefined, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID)
     tokenVault = getAssociatedTokenAddressSync(mint.publicKey, tokenVaultAuthority, true, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
+    savePublicKey(process.env.ANCHOR, 'tokenVault', tokenVault);
     counterPartyToken = (await getOrCreateAssociatedTokenAccount(provider.connection, walletKeypair, mint.publicKey, counterPartyKeypair.publicKey, false, undefined, undefined, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID)).address;
     userToken = userUsdtTokenAccount.address;
 }
@@ -216,7 +234,10 @@ export async function addToken() {
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: anchor.web3.SystemProgram.programId,
                 }).signers([bankKeypair, walletKeypair]).rpc();
+
+            return;
         }
+        throw e;
     }
 }
 
@@ -248,11 +269,12 @@ export async function depositSOL() {
 }
 
 export async function withdrawSOL() {
+    await sleep(1000);
     let amount = new anchor.BN(10);
     let solVaultBefore = await provider.connection.getBalance(solVault);
     let receiverBefore = await provider.connection.getBalance(userKeypair.publicKey);
 
-    const withdraw_sol_tx = await program.methods.withdrawSol(amount, new anchor.BN(Date.now() / 1000 + 10), new anchor.BN(Date.now()))
+    const withdraw_sol_tx = await program.methods.withdrawSol(amount, parseInt((Date.now() / 1000 + 10).toString()), parseInt((Date.now() / 1000).toString()))
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
@@ -264,7 +286,7 @@ export async function withdrawSOL() {
         }).signers([walletKeypair]).rpc({
             skipPreflight: true
         })
-    // .catch(e => console.error(e))
+    //.catch(e => console.error(e))
 
 
     let solVaultAfter = await provider.connection.getBalance(solVault);
@@ -380,11 +402,12 @@ export async function depositToken() {
 }
 
 export async function withdrawToken() {
+    await sleep(1000);
     let amount = new anchor.BN(1e6);
     let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
     let receiverBefore = await provider.connection.getTokenAccountBalance(userToken);
 
-    let withdraw_token_tx = await program.methods.withdrawToken(amount, new anchor.BN(Date.now()/1000 + 10), new anchor.BN(Date.now())).accounts({
+    let withdraw_token_tx = await program.methods.withdrawToken(amount, new anchor.BN(Date.now()/1000 + 10), new anchor.BN(Date.now()/1000)).accounts({
         signer: walletKeypair.publicKey,
         admin: admin,
         bank: bankKeypair.publicKey,
@@ -408,8 +431,9 @@ export async function withdrawToken() {
 }
 
 export async function withdrawTokenBySignature() {
+    await sleep(1000);
     let now = Date.now();
-    let idempotent = new anchor.BN(now);
+    let idempotent = new anchor.BN(now/1000);
     let deadLine = new anchor.BN((Date.now() / 1000 + 10));
     let amount = new anchor.BN(10e6);
 
@@ -481,8 +505,9 @@ export async function withdrawTokenBySignature() {
 }
 
 export async function withdrawSOLBySignature() {
+    await sleep(1000);
     let now = Date.now();
-    let idempotent = new anchor.BN(now);
+    let idempotent = new anchor.BN(now/1000);
     let deadLine = new anchor.BN((Date.now() / 1000 + 10));
     let amount = new anchor.BN(10);
 

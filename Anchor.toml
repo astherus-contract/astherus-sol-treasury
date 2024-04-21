@@ -5,17 +5,16 @@ seeds = false
 skip-lint = false
 
 [programs.devnet]
-cloud_sol_treasury = "8vDBbPQYPX3Q6CKKsdFkhNv4TtGDk3fBwkT3LsdukbSv"
+cloud_sol_treasury = "GerVDHW2N98Y2ssKGSfCwswYC9oF7gDrPHvRxtXek3TG"
 
 [programs.localnet]
-cloud_sol_treasury = "8vDBbPQYPX3Q6CKKsdFkhNv4TtGDk3fBwkT3LsdukbSv"
+cloud_sol_treasury = "GerVDHW2N98Y2ssKGSfCwswYC9oF7gDrPHvRxtXek3TG"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
-#cluster = "Devnet"
+cluster = "Devnet"
 wallet = "/Users/user/.config/solana/id.json"
 
 [scripts]

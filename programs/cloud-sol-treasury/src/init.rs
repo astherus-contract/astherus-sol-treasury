@@ -182,7 +182,7 @@ pub struct Admin {
     pub operator: Pubkey,
     pub truth_holder: Pubkey,
     pub counter_party: Pubkey,
-    pub claim_per_hour_cursor: u64,
+    pub claim_per_hour_cursor: u32,
     pub claim_per_hour_value: u64,
     pub price_feed_program: Pubkey,
 }
@@ -191,6 +191,6 @@ pub struct Admin {
 #[derive(Debug, Eq, PartialEq)]
 #[repr(C)]
 pub struct ClaimHistoryItem {
-    pub idempotent: u64,
-    pub dead_line: u64,
+    pub idempotent: u32,
+    pub dead_line: u32,
 }

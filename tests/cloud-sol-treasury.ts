@@ -66,7 +66,7 @@ describe("cloud-sol-treasury", () => {
     let userToken;
     let counterPartyToken;
 
-    async function withdrawsSolBySignature(idempotent: anchor.BN, deadLine: anchor.BN, amount: anchor.BN) {
+    async function withdrawsSolBySignature(idempotent: number, deadLine: number, amount: anchor.BN) {
         let solVaultBefore = await provider.connection.getBalance(solVault);
         let receiverBefore = await provider.connection.getBalance(userKeypair.publicKey);
 
@@ -195,7 +195,8 @@ describe("cloud-sol-treasury", () => {
                 priceFeed: priceFeed,
                 priceFeedProgram: priceFeedProgram,
                 systemProgram: anchor.web3.SystemProgram.programId,
-            }).signers([walletKeypair]).rpc();
+            }).signers([walletKeypair]).rpc()
+            // .catch(e => console.error(e));
     });
 
     it("Is add token", async () => {
@@ -251,7 +252,7 @@ describe("cloud-sol-treasury", () => {
         let solVaultBefore = await provider.connection.getBalance(solVault);
         let receiverBefore = await provider.connection.getBalance(userKeypair.publicKey);
 
-        const withdraw_sol_tx = await program.methods.withdrawSol(amount, new anchor.BN(Date.now() / 1000 + 10), new anchor.BN(Date.now()))
+        const withdraw_sol_tx = await program.methods.withdrawSol(amount, Date.now() / 1000 + 10, Date.now()/1000)
             .accounts({
                 signer: walletKeypair.publicKey,
                 admin: admin,
@@ -387,11 +388,12 @@ describe("cloud-sol-treasury", () => {
     });
 
     it("Withdraws Token", async () => {
+        await sleep(1000);
         let amount = new anchor.BN(1e6);
         let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
         let receiverBefore = await provider.connection.getTokenAccountBalance(userToken);
 
-        let withdraw_token_tx = await program.methods.withdrawToken(amount, new anchor.BN(Date.now()/1000 + 10), new anchor.BN(Date.now())).accounts({
+        let withdraw_token_tx = await program.methods.withdrawToken(amount, Date.now()/1000 + 10, Date.now()/1000).accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             bank: bankKeypair.publicKey,
@@ -415,9 +417,11 @@ describe("cloud-sol-treasury", () => {
     });
 
     it("Withdraws Token BY signature", async () => {
+        await sleep(1000);
         let now = Date.now();
-        let idempotent = new anchor.BN(now);
-        let deadLine = new anchor.BN((Date.now() / 1000 + 10));
+
+        let idempotent = parseInt((now/1000).toString());
+        let deadLine = parseInt((Date.now() / 1000 + 10).toString());
         let amount = new anchor.BN(10e6);
 
         let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
@@ -488,9 +492,10 @@ describe("cloud-sol-treasury", () => {
     });
 
     it("Withdraws SOl BY signature", async () => {
+        await sleep(1000);
         let now = Date.now();
-        let idempotent = new anchor.BN(now);
-        let deadLine = new anchor.BN((Date.now() / 1000 + 10));
+        let idempotent = parseInt((now / 1000).toString());
+        let deadLine = parseInt((Date.now() / 1000 + 10).toString());
         let amount = new anchor.BN(10e6);
 
         await withdrawsSolBySignature(idempotent, deadLine, amount)
@@ -550,8 +555,8 @@ describe("cloud-sol-treasury", () => {
     it("check idempotent", async () => {
         let amount = new anchor.BN(10e6);
         let now = Date.now();
-        let idempotent = new anchor.BN(now);
-        let deadLine = new anchor.BN((Date.now() / 1000 + 10));
+        let idempotent = parseInt((now/1000).toString());
+        let deadLine = parseInt((Date.now() / 1000 + 10).toString());
         await withdrawsSolBySignature(idempotent, deadLine, amount)
 
         let solVaultBefore = await provider.connection.getBalance(solVault);
@@ -575,8 +580,8 @@ describe("cloud-sol-treasury", () => {
         while (true) {
             //console.log(i)
             let now = Date.now();
-            let idempotent = new anchor.BN(now);
-            let deadLine = new anchor.BN((Date.now() / 1000 + 500));
+            let idempotent = parseInt((now/1000).toString());
+            let deadLine = parseInt((Date.now() / 1000 + 500).toString());
             try {
                 await withdrawsSolBySignature(idempotent, deadLine, amount)
             } catch (e) {

@@ -23,7 +23,7 @@ use crate::constants;
 use chainlink_solana as chainlink;
 
 
-pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64, dead_line: u64, idempotent: u64) -> Result<()> {
+pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64, dead_line: u32, idempotent: u32) -> Result<()> {
     {
         let admin = ctx.accounts.admin.load()?;
         let sol_vault = ctx.accounts.sol_vault.load()?;
@@ -47,7 +47,7 @@ pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64, dead_line: u64, idem
     Ok(())
 }
 
-pub fn withdraw_sol_by_signature(ctx: Context<WithdrawSolBySignature>, amount: u64, dead_line: u64, idempotent: u64, signature: [u8; 64]) -> Result<()> {
+pub fn withdraw_sol_by_signature(ctx: Context<WithdrawSolBySignature>, amount: u64, dead_line: u32, idempotent: u32, signature: [u8; 64]) -> Result<()> {
     {
         let admin = ctx.accounts.admin.load()?;
         let sol_vault = ctx.accounts.sol_vault.load()?;
@@ -100,10 +100,11 @@ fn do_withdraw_sol<'info>(signer: &Signer<'info>,
                           receiver: &UncheckedAccount<'info>,
                           price_feed: &UncheckedAccount<'info>,
                           price_feed_program: &UncheckedAccount<'info>,
-                          amount: u64, dead_line: u64, idempotent: u64) -> Result<()> {
+                          amount: u64, dead_line: u32, idempotent: u32) -> Result<()> {
     let admin = &mut admin.load_mut()?;
 
-    let current_timestamp = Clock::get()?.unix_timestamp as u64;
+    let current_timestamp = Clock::get()?.unix_timestamp as u32;
+    msg!("ErrorCode::AlreadyPassedDeadline current_timestamp={},dead_line={}",current_timestamp,dead_line);
     require!(dead_line > current_timestamp , ErrorCode::AlreadyPassedDeadline);
     require!(dead_line < (current_timestamp+60*10) , ErrorCode::AlreadyPassedDeadline);
 
@@ -218,7 +219,7 @@ pub fn withdraw_sol_to_counter_party(ctx: Context<WithdrawSolToCounterParty>, am
 }
 
 //钱包发起交易上链
-pub fn withdraw_token(ctx: Context<WithdrawToken>, amount: u64, dead_line: u64, idempotent: u64) -> Result<()> {
+pub fn withdraw_token(ctx: Context<WithdrawToken>, amount: u64, dead_line: u32, idempotent: u32) -> Result<()> {
     {
         let admin = ctx.accounts.admin.load()?;
         let bank = ctx.accounts.bank.load()?;
@@ -246,7 +247,7 @@ pub fn withdraw_token(ctx: Context<WithdrawToken>, amount: u64, dead_line: u64, 
 }
 
 //钱包签名消息，用户发起交易上链
-pub fn withdraw_token_by_signature(ctx: Context<WithdrawTokenBySignature>, amount: u64, dead_line: u64, idempotent: u64, signature: [u8; 64]) -> Result<()> {
+pub fn withdraw_token_by_signature(ctx: Context<WithdrawTokenBySignature>, amount: u64, dead_line: u32, idempotent: u32, signature: [u8; 64]) -> Result<()> {
     {
         let admin = ctx.accounts.admin.load()?;
         let bank = ctx.accounts.bank.load()?;
@@ -310,12 +311,12 @@ fn do_withdraw_token<'info>(signer: &Signer<'info>,
                             price_feed: &UncheckedAccount<'info>,
                             price_feed_program: &UncheckedAccount<'info>,
                             token_program: &Program<'info, Token>,
-                            amount: u64, dead_line: u64, idempotent: u64) -> Result<()> {
+                            amount: u64, dead_line: u32, idempotent: u32) -> Result<()> {
     let bank_pubkey = bank.key();
     let admin = &mut admin.load_mut()?;
     let bank = &mut bank.load_mut()?;
 
-    let current_timestamp = Clock::get()?.unix_timestamp as u64;
+    let current_timestamp = Clock::get()?.unix_timestamp as u32;
 
     require!(dead_line > current_timestamp, ErrorCode::AlreadyPassedDeadline);
     require!(dead_line < (current_timestamp+60*10) , ErrorCode::AlreadyPassedDeadline);
