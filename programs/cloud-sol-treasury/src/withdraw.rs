@@ -104,7 +104,6 @@ fn do_withdraw_sol<'info>(signer: &Signer<'info>,
     let admin = &mut admin.load_mut()?;
 
     let current_timestamp = Clock::get()?.unix_timestamp as u32;
-    msg!("ErrorCode::AlreadyPassedDeadline current_timestamp={},dead_line={}",current_timestamp,dead_line);
     require!(dead_line > current_timestamp , ErrorCode::AlreadyPassedDeadline);
     require!(dead_line < (current_timestamp+60*10) , ErrorCode::AlreadyPassedDeadline);
 
