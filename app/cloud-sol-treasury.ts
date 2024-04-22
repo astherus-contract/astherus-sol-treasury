@@ -150,22 +150,21 @@ export async function prepareToken() {
         await getMint(provider.connection, mint.publicKey, null, TOKEN_PROGRAM_ID);
     } catch (e) {
         // console.log(e)
-        if (e.toString().indexOf('TokenAccountNotFoundError') >= 0) {
-            await createMint(
-                provider.connection,
-                walletKeypair,
-                usdc_auth.publicKey,
-                usdc_auth.publicKey,
-                0,
-                mint,
-                null,
-                TOKEN_PROGRAM_ID
-            );
-            let userUsdtTokenAccount = await getOrCreateAssociatedTokenAccount(provider.connection, walletKeypair, mint.publicKey, walletKeypair.publicKey, false, undefined, undefined, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID)
-            await mintToChecked(provider.connection, walletKeypair, mint.publicKey, userUsdtTokenAccount.address, usdc_auth, 20000000000000e6, 0, [], undefined, TOKEN_PROGRAM_ID);
-            return
+        if(e.toString().indexOf('TokenAccountNotFoundError') <0){
+            throw e;
         }
-        throw e;
+        await createMint(
+            provider.connection,
+            walletKeypair,
+            usdc_auth.publicKey,
+            usdc_auth.publicKey,
+            0,
+            mint,
+            null,
+            TOKEN_PROGRAM_ID
+        );
+        let userUsdtTokenAccount = await getOrCreateAssociatedTokenAccount(provider.connection, walletKeypair, mint.publicKey, walletKeypair.publicKey, false, undefined, undefined, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID)
+        await mintToChecked(provider.connection, walletKeypair, mint.publicKey, userUsdtTokenAccount.address, usdc_auth, 20000000000000e6, 0, [], undefined, TOKEN_PROGRAM_ID);
     }
 
     let userUsdtTokenAccount = await getOrCreateAssociatedTokenAccount(provider.connection, walletKeypair, mint.publicKey, walletKeypair.publicKey, false, undefined, undefined, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID)

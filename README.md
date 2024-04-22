@@ -24,7 +24,7 @@ solana-test-validator
 
 # 不重新启动本地节点
 anchor test --skip-local-validator
-
+anchor keys sync
 
 solana balance
 
