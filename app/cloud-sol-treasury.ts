@@ -150,7 +150,7 @@ export async function prepareToken() {
         await getMint(provider.connection, mint.publicKey, null, TOKEN_PROGRAM_ID);
     } catch (e) {
         // console.log(e)
-        if(e.toString().indexOf('TokenAccountNotFoundError') <0){
+        if (e.toString().indexOf('TokenAccountNotFoundError') < 0) {
             throw e;
         }
         await createMint(
@@ -260,7 +260,6 @@ export async function depositSOL() {
     //console.log(JSON.stringify(await provider.connection.getTransaction('2bSezMXLCYJYvvNyYXzt5YNDm9mr58w8GKWWmPHE2HiLhFTV74pVoPr99x5WSvtpVLtszz4wTw2mya2b1a8b4TAa',{'commitment':'confirmed'})))
 
 
-
     let solVaultAfter = await provider.connection.getBalance(solVault);
     let depositorAfter = await provider.connection.getBalance(walletKeypair.publicKey);
     // assert.equal(new anchor.BN(solVaultAfter).sub(new anchor.BN(solVaultBefore)).toString(), amount.toString())
@@ -362,6 +361,18 @@ export async function changeTruthHolder() {
     //console.log("Your transaction signature", tx);
 }
 
+export async function changeAuthority() {
+    const tx = await program.methods.changeAuthority(walletKeypair.publicKey)
+        .accounts({
+            signer: walletKeypair.publicKey,
+            admin: admin,
+            systemProgram: anchor.web3.SystemProgram.programId,
+        }).signers([walletKeypair]).rpc();
+
+    //console.log("Your transaction signature", tx);
+
+}
+
 export async function changePriceFeedProgram() {
     const tx = await program.methods.changePriceFeedProgram(priceFeedProgram)
         .accounts({
@@ -370,6 +381,32 @@ export async function changePriceFeedProgram() {
             systemProgram: anchor.web3.SystemProgram.programId,
         }).signers([walletKeypair]).rpc();
 }
+
+export async function updateTokenEnable() {
+    const tx = await program.methods.updateTokenEnabled(true)
+        .accounts({
+            signer: walletKeypair.publicKey,
+            admin: admin,
+            bank: bankKeypair.publicKey,
+            tokenVaultAuthority: tokenVaultAuthority,
+            tokenVault: tokenVault,
+            tokenMint: mint.publicKey,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            systemProgram: anchor.web3.SystemProgram.programId,
+        }).signers([walletKeypair]).rpc();
+}
+
+export async function updateSolEnable() {
+    const tx = await program.methods.updateSolEnabled(true)
+        .accounts({
+            signer: walletKeypair.publicKey,
+            admin: admin,
+            solVault: solVault,
+            systemProgram: anchor.web3.SystemProgram.programId,
+        }).signers([walletKeypair]).rpc();
+}
+
 
 export async function depositToken() {
     let amount = new anchor.BN(25e6);
@@ -406,7 +443,7 @@ export async function withdrawToken() {
     let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
     let receiverBefore = await provider.connection.getTokenAccountBalance(userToken);
 
-    let withdraw_token_tx = await program.methods.withdrawToken(amount, new anchor.BN(Date.now()/1000 + 10), new anchor.BN(Date.now()/1000)).accounts({
+    let withdraw_token_tx = await program.methods.withdrawToken(amount, new anchor.BN(Date.now() / 1000 + 10), new anchor.BN(Date.now() / 1000)).accounts({
         signer: walletKeypair.publicKey,
         admin: admin,
         bank: bankKeypair.publicKey,
@@ -432,7 +469,7 @@ export async function withdrawToken() {
 export async function withdrawTokenBySignature() {
     await sleep(1000);
     let now = Date.now();
-    let idempotent = new anchor.BN(now/1000);
+    let idempotent = new anchor.BN(now / 1000);
     let deadLine = new anchor.BN((Date.now() / 1000 + 10));
     let amount = new anchor.BN(10e6);
 
@@ -506,7 +543,7 @@ export async function withdrawTokenBySignature() {
 export async function withdrawSOLBySignature() {
     await sleep(1000);
     let now = Date.now();
-    let idempotent = new anchor.BN(now/1000);
+    let idempotent = new anchor.BN(now / 1000);
     let deadLine = new anchor.BN((Date.now() / 1000 + 10));
     let amount = new anchor.BN(10);
 

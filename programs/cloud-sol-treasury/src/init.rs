@@ -128,6 +128,24 @@ pub fn change_truth_holder(ctx: Context<UpdateAdmin>, truth_holder: Pubkey) -> R
     Ok(())
 }
 
+pub fn change_authority(ctx: Context<UpdateAdmin>, authority: Pubkey) -> Result<()> {
+    let admin = &mut ctx.accounts.admin.load_mut()?;
+    let old_authority = admin.authority;
+    admin.authority = authority;
+
+    emit!(ChangeAuthorityEvent{
+        old_authority : old_authority,
+        new_authority:authority
+    });
+
+    msg!("ChangeAuthorityEvent:oldAuthority={},newAuthority={}",
+        old_authority.key().to_string(),
+        authority.key().to_string()
+    );
+
+    Ok(())
+}
+
 pub fn change_price_feed_program(ctx: Context<UpdateAdmin>, price_feed_program: Pubkey) -> Result<()> {
     let admin = &mut ctx.accounts.admin.load_mut()?;
     let old_price_feed_program = admin.price_feed_program;

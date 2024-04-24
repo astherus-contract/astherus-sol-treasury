@@ -46,6 +46,10 @@ pub mod cloud_sol_treasury {
         return init::change_truth_holder(ctx, truth_holder);
     }
 
+    pub fn change_authority(ctx: Context<UpdateAdmin>, authority: Pubkey) -> Result<()> {
+        return init::change_authority(ctx, authority);
+    }
+
     pub fn change_price_feed_program(ctx: Context<UpdateAdmin>, price_feed_program: Pubkey) -> Result<()> {
         return init::change_price_feed_program(ctx, price_feed_program);
     }

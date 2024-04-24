@@ -341,6 +341,18 @@ describe("cloud-sol-treasury", () => {
 
     });
 
+    it("Is changeAuthority", async () => {
+        const tx = await program.methods.changeAuthority(walletKeypair.publicKey)
+            .accounts({
+                signer: walletKeypair.publicKey,
+                admin: admin,
+                systemProgram: anchor.web3.SystemProgram.programId,
+            }).signers([walletKeypair]).rpc();
+
+        //console.log("Your transaction signature", tx);
+
+    });
+
     it("Is changePriceFeedProgram", async () => {
         const tx = await program.methods.changePriceFeedProgram(priceFeedProgram)
             .accounts({

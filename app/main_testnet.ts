@@ -1,6 +1,6 @@
 import {
     addSol,
-    addToken,
+    addToken, changeAuthority,
     changeCounterParty,
     changeOperator,
     changePriceFeedProgram,
@@ -11,7 +11,7 @@ import {
     prepareToken,
     requestAirdropAll,
     updateGlobalWithdrawEnabled,
-    updateHourlyLimit,
+    updateHourlyLimit, updateSolEnable, updateTokenEnable,
     withdrawSOL,
     withdrawSOLBySignature,
     withdrawSOLToCounterParty,
@@ -52,10 +52,17 @@ async function main() {
     console.log('changeCounterParty Success');
     await changeTruthHolder();
     console.log('changeTruthHolder Success');
+    await changeAuthority();
+    console.log('changeAuthority Success');
     await changePriceFeedProgram();
     console.log('changePriceFeedProgram Success');
     await changePriceFeedProgram();
     console.log('changePriceFeedProgram Success');
+
+    await updateTokenEnable()
+    console.log('updateTokenEnable Success');
+    await updateSolEnable();
+    console.log('updateSolEnable Success');
 
     await depositToken();
     console.log('depositToken Success');

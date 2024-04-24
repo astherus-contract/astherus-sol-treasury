@@ -35,6 +35,14 @@ pub struct ChangeTruthHolderEvent {
     pub new_truth_holder: Pubkey,
 }
 
+
+#[event]
+pub struct ChangeAuthorityEvent {
+    pub old_authority: Pubkey,
+    pub new_authority: Pubkey,
+}
+
+
 #[event]
 pub struct ChangePriceFeedProgramEvent {
     pub old_price_feed_program: Pubkey,
