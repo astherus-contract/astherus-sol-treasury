@@ -36,3 +36,6 @@ solana transfer --from /Users/user/.config/solana/id.json 3Tw6dkrzSJx66jwX4evf9G
 
 
 solana program extend 8vDBbPQYPX3Q6CKKsdFkhNv4TtGDk3fBwkT3LsdukbSv 10000
+
+
+solana program set-upgrade-authority

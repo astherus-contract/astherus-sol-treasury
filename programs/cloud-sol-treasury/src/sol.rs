@@ -82,7 +82,7 @@ pub struct UpdateSolEnabled<'info> {
     #[account(constraint = admin.load() ?.authority == * signer.key)]
     pub admin: AccountLoader<'info, Admin>,
 
-    #[account(has_one = admin, seeds = [constants::SOL_VAULT.as_bytes(), admin.key().as_ref()], bump = admin.load() ?.sol_vault_bump)]
+    #[account(mut, has_one = admin, seeds = [constants::SOL_VAULT.as_bytes(), admin.key().as_ref()], bump = admin.load() ?.sol_vault_bump)]
     pub sol_vault: AccountLoader<'info, SolVault>,
     pub system_program: Program<'info, System>,
 }

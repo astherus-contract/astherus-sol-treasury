@@ -14,7 +14,6 @@ use crate::constants;
 
 pub fn add_token(ctx: Context<AddToken>, enabled: bool, token_vault_authority_bump: u8,price: u64, fixed_price: bool, price_decimals: u8, token_decimals: u8) -> Result<()> {
     let bank = &mut ctx.accounts.bank.load_init()?;
-    bank.authority = ctx.accounts.signer.key();
     bank.admin = ctx.accounts.admin.key();
     bank.token_mint = ctx.accounts.token_mint.key();
     bank.token_vault_authority = ctx.accounts.token_vault_authority.key();
@@ -97,14 +96,16 @@ pub struct AddToken<'info> {
 pub struct UpdateTokenEnabled<'info> {
     #[account()]
     pub signer: Signer<'info>,
-    #[account(has_one = token_vault_authority, constraint = bank.load() ?.authority == * signer.key)]
+    #[account(constraint = admin.load() ?.authority == * signer.key)]
+    pub admin: AccountLoader<'info, Admin>,
+    #[account(mut,has_one = token_vault_authority, has_one = admin)]
     pub bank: AccountLoader<'info, Bank>,
 
     /// CHECK
     #[account(seeds = [constants::TOKEN_VAULT_AUTHORITY.as_bytes(), bank.key().as_ref()], bump = bank.load() ?.token_vault_authority_bump)]
     pub token_vault_authority: UncheckedAccount<'info>,
 
-    #[account(mut, associated_token::mint = token_mint, associated_token::authority = token_vault_authority,)]
+    #[account(associated_token::mint = token_mint, associated_token::authority = token_vault_authority,)]
     pub token_vault: Account<'info, TokenAccount>,
 
     pub token_mint: Account<'info, Mint>,
@@ -117,8 +118,7 @@ pub struct UpdateTokenEnabled<'info> {
 #[derive(Eq, PartialEq, Debug)]
 #[repr(C)]
 pub struct Bank {
-    //8+32+32+32+32+1+1+(4+4)*1200+32+8+1+1+1=9781<10240
-    pub authority: Pubkey,
+    //8+32+32+32+1+1+(4+4)*1200+32+8+1+1+1=9749<10240
     pub admin: Pubkey,
     pub token_mint: Pubkey,
     pub token_vault_authority: Pubkey,

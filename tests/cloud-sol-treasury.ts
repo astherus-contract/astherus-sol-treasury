@@ -358,6 +358,41 @@ describe("cloud-sol-treasury", () => {
         // console.log("program.account.admin.all",result);
     });
 
+    it("Is update token enable", async () => {
+        const tx = await program.methods.updateTokenEnabled(true)
+            .accounts({
+                signer: walletKeypair.publicKey,
+                admin: admin,
+                bank: bankKeypair.publicKey,
+                tokenVaultAuthority: tokenVaultAuthority,
+                tokenVault: tokenVault,
+                tokenMint: mint.publicKey,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                tokenProgram: TOKEN_PROGRAM_ID,
+                systemProgram: anchor.web3.SystemProgram.programId,
+            }).signers([walletKeypair]).rpc();
+
+        //console.log("Your transaction signature", tx);
+
+        // let result = await program.account.bank.fetch(bankKeypair.publicKey);
+        // //console.log(result);
+    });
+
+    it("Is update sol enable", async () => {
+        const tx = await program.methods.updateSolEnabled(true)
+            .accounts({
+                signer: walletKeypair.publicKey,
+                admin: admin,
+                solVault: solVault,
+                systemProgram: anchor.web3.SystemProgram.programId,
+            }).signers([walletKeypair]).rpc();
+
+        //console.log("Your transaction signature", tx);
+
+        // let result = await program.account.bank.fetch(bankKeypair.publicKey);
+        // //console.log(result);
+    });
+
     it("Deposits Token", async () => {
         let amount = new anchor.BN(25e6);
         let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);

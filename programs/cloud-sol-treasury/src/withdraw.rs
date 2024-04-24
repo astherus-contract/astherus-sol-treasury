@@ -543,7 +543,7 @@ pub struct WithdrawToken<'info> {
     pub signer: Signer<'info>,
     #[account(mut, constraint = admin.load() ?.authority == * signer.key, has_one = price_feed_program)]
     pub admin: AccountLoader<'info, Admin>,
-    #[account(mut, has_one = token_vault_authority, has_one = admin, constraint = bank.load() ?.authority == * signer.key,has_one = price_feed)]
+    #[account(mut, has_one = token_vault_authority, has_one = admin, has_one = price_feed)]
     pub bank: AccountLoader<'info, Bank>,
 
     /// CHECK
@@ -603,7 +603,7 @@ pub struct WithdrawTokenBySignature<'info> {
     #[account(seeds = [constants::TOKEN_VAULT_AUTHORITY.as_bytes(), bank.key().as_ref()], bump = bank.load() ?.token_vault_authority_bump)]
     pub token_vault_authority: UncheckedAccount<'info>,
 
-    #[account(mut, associated_token::mint = token_mint, associated_token::authority = token_vault_authority,)]
+    #[account(mut, associated_token::mint = token_mint, associated_token::authority = token_vault_authority)]
     pub token_vault: Account<'info, TokenAccount>,
     #[account(mut)]
     pub receiver: Account<'info, TokenAccount>,
