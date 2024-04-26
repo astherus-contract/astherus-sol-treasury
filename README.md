@@ -39,3 +39,11 @@ solana program extend 8vDBbPQYPX3Q6CKKsdFkhNv4TtGDk3fBwkT3LsdukbSv 10000
 
 
 solana program set-upgrade-authority
+
+
+solana transfer --from /Users/user/.config/solana/id.json 31qHCx5zjuzB9ByW6Tnno9neHZeyQo6DTqLEMShHyjrj 2 --allow-unfunded-recipient --url https://api.devnet.solana.com --fee-payer /Users/user/.config/solana/id.json
+
+
+https://faucet.solana.com/
+https://solfaucet.com/
+https://faucet.quicknode.com/solana

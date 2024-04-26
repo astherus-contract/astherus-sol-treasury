@@ -13,6 +13,8 @@ import {
 import assert from "assert";
 import * as ed from "@noble/ed25519";
 import sleep from 'await-sleep'
+import * as borsh from 'borsh';
+
 
 
 const createKeccakHash = require('keccak')
@@ -40,6 +42,7 @@ let sol_vault_bump;
 let tokenVault;
 let userToken;
 let counterPartyToken;
+let removeClaimHistoryKeypair
 
 export async function loadProvider() {
     savePublicKey(process.env.ANCHOR, 'associatedTokenProgram', ASSOCIATED_TOKEN_PROGRAM_ID);
@@ -56,7 +59,7 @@ export async function loadProvider() {
         saveKeypair(process.env.ANCHOR, 'programWallet', programWallet);
     }
     program = anchor.workspace.CloudSolTreasury as Program<CloudSolTreasury>;
-    console.log(program.programId)
+    //console.log(program.programId)
 }
 
 
@@ -75,6 +78,8 @@ export async function loadKeypair() {
 
     userKeypair = getOrCreateKeypair(process.env.ANCHOR, 'user');
 //const userKeypair = anchor.web3.Keypair.generate();
+
+    removeClaimHistoryKeypair = getOrCreateKeypair(process.env.ANCHOR, 'removeClaimHistory');
 
     priceFeed = getOrCreateKeypair(process.env.ANCHOR, 'priceFeed').publicKey;
 //const priceFeed = anchor.web3.Keypair.generate().publicKey;
@@ -143,6 +148,12 @@ export async function requestAirdropAll() {
     } catch (e) {
         console.log(e)
     }
+
+    try {
+        await requestAirdrop(removeClaimHistoryKeypair.publicKey);
+    } catch (e) {
+        console.log(e)
+    }
 }
 
 export async function prepareToken() {
@@ -178,7 +189,7 @@ export async function initialize() {
     if ((await provider.connection.getAccountInfo(admin)) != null) {
         return
     }
-    const tx = await program.methods.initialize(true, new anchor.BN(100e8), walletKeypair.publicKey, walletKeypair.publicKey, walletKeypair.publicKey, priceFeedProgram)
+    const tx = await program.methods.initialize(true, new anchor.BN(100e8), walletKeypair.publicKey, walletKeypair.publicKey, walletKeypair.publicKey, priceFeedProgram,removeClaimHistoryKeypair.publicKey)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
@@ -272,7 +283,7 @@ export async function withdrawSOL() {
     let solVaultBefore = await provider.connection.getBalance(solVault);
     let receiverBefore = await provider.connection.getBalance(userKeypair.publicKey);
 
-    const withdraw_sol_tx = await program.methods.withdrawSol(amount, parseInt((Date.now() / 1000 + 10).toString()), parseInt((Date.now() / 1000).toString()))
+    const withdraw_sol_tx = await program.methods.withdrawSol(amount, parseInt((Date.now() / 1000 + 10).toString()), new anchor.BN(Date.now()))
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
@@ -438,12 +449,11 @@ export async function depositToken() {
 }
 
 export async function withdrawToken() {
-    await sleep(1000);
     let amount = new anchor.BN(1e6);
     let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
     let receiverBefore = await provider.connection.getTokenAccountBalance(userToken);
 
-    let withdraw_token_tx = await program.methods.withdrawToken(amount, new anchor.BN(Date.now() / 1000 + 10), new anchor.BN(Date.now() / 1000)).accounts({
+    let withdraw_token_tx = await program.methods.withdrawToken(amount, new anchor.BN(Date.now() / 1000 + 10), new anchor.BN(Date.now())).accounts({
         signer: walletKeypair.publicKey,
         admin: admin,
         bank: bankKeypair.publicKey,
@@ -469,8 +479,8 @@ export async function withdrawToken() {
 export async function withdrawTokenBySignature() {
     await sleep(1000);
     let now = Date.now();
-    let idempotent = new anchor.BN(now / 1000);
-    let deadLine = new anchor.BN((Date.now() / 1000 + 10));
+    let idempotent = new anchor.BN(now);
+    let deadLine = parseInt((Date.now() / 1000 + 10).toString());
     let amount = new anchor.BN(10e6);
 
     let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
@@ -543,8 +553,8 @@ export async function withdrawTokenBySignature() {
 export async function withdrawSOLBySignature() {
     await sleep(1000);
     let now = Date.now();
-    let idempotent = new anchor.BN(now / 1000);
-    let deadLine = new anchor.BN((Date.now() / 1000 + 10));
+    let idempotent = new anchor.BN(now);
+    let deadLine = parseInt((Date.now() / 1000 + 10).toString());
     let amount = new anchor.BN(10);
 
     await doWithdrawSolBySignature(idempotent, deadLine, amount)
@@ -600,7 +610,7 @@ export async function withdrawTokenToCounterParty() {
 
 }
 
-async function doWithdrawSolBySignature(idempotent: anchor.BN, deadLine: anchor.BN, amount: anchor.BN) {
+async function doWithdrawSolBySignature(idempotent: anchor.BN, deadLine: number, amount: anchor.BN) {
     let solVaultBefore = await provider.connection.getBalance(solVault);
     let receiverBefore = await provider.connection.getBalance(userKeypair.publicKey);
 
@@ -654,4 +664,49 @@ async function doWithdrawSolBySignature(idempotent: anchor.BN, deadLine: anchor.
 
     assert.equal(new anchor.BN(solVaultBefore).sub(new anchor.BN(solVaultAfter)).toString(), amount.toString())
     assert.equal(new anchor.BN(receiverAfter).sub(new anchor.BN(receiverBefore)).toString(), amount.toString())
+}
+
+export async function removeSolClaimHistory() {
+    let arr='1111,222'
+    await program.methods.removeSolClaimHistory(arr).accounts({
+        signer: removeClaimHistoryKeypair.publicKey,
+        admin: admin,
+        solVault: solVault,
+        systemProgram: anchor.web3.SystemProgram.programId,
+    }).signers([removeClaimHistoryKeypair]).rpc({
+        skipPreflight: true
+    })
+        .catch(e => console.error(e))
+}
+
+export async function removeTokenClaimHistory(idempotents: String) {
+    await program.methods.removeTokenClaimHistory(idempotents).accounts({
+        signer: removeClaimHistoryKeypair.publicKey,
+        admin: admin,
+        bank: bankKeypair.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+    }).signers([removeClaimHistoryKeypair]).rpc({
+        skipPreflight: true
+    })
+}
+
+async function getClaimHistory(address: PublicKey, name: String) {
+    const uint32Array = Uint32Array.of(800);
+    const uint8Array = new Uint8Array(uint32Array.buffer);
+    const schema = {struct: {idempotent: {array: {type: 'u64'}}, deadLine: {array: {type: 'u32'}}}};
+    let account = await provider.connection.getAccountInfo(address);
+    const decoded = borsh.deserialize(schema, Buffer.concat([uint8Array, new Uint8Array(account.data.slice(8, 8 + 8 * 800)), uint8Array, new Uint8Array(account.data.slice(8 + 8 * 800, 8 + 8 * 800 + 4 * 800))]));
+
+    console.log(`getClaimHistory address ${address.toBase58()},name ${name}`)
+    for (let i = 0; i < 800; i++) {
+        if (decoded["idempotent"][i] != 0 || decoded["deadLine"][i] != 0) {
+            console.log(`idempotent:${decoded["idempotent"][i]},deadLine:${decoded["deadLine"][i]}`)
+        }
+    }
+    console.log('')
+}
+
+export async function getAllClaimHistory() {
+    await getClaimHistory(bankKeypair.publicKey,"bank");
+    await getClaimHistory(solVault,"solVault");
 }

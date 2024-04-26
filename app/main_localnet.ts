@@ -6,9 +6,9 @@ import {
     changePriceFeedProgram,
     changeTruthHolder,
     depositSOL,
-    depositToken,
+    depositToken, getAllClaimHistory,
     initialize, loadKeypair, loadProvider,
-    prepareToken,
+    prepareToken, removeSolClaimHistory, removeTokenClaimHistory,
     requestAirdropAll,
     updateGlobalWithdrawEnabled,
     updateHourlyLimit, updateSolEnable, updateTokenEnable,
@@ -82,6 +82,14 @@ async function main() {
     console.log('withdrawSOLToCounterParty Success');
     await withdrawTokenToCounterParty();
     console.log('withdrawTokenToCounterParty Success');
+
+    await removeSolClaimHistory();
+    console.log('removeSolClaimHistory Success');
+    await removeTokenClaimHistory('222,222');
+    console.log('removeTokenClaimHistory Success');
+
+    await getAllClaimHistory();
+    console.log('getClaimHistory Success');
 
     console.log('all Success');
 }

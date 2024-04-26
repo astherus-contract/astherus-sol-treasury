@@ -6,7 +6,7 @@ use crate::constants;
 
 
 pub fn initialize(ctx: Context<Initialize>, global_withdraw_enabled: bool, hourly_limit: u64,
-                  operator: Pubkey, counter_party: Pubkey, truth_holder: Pubkey, price_feed_program: Pubkey) -> Result<()> {
+                  operator: Pubkey, counter_party: Pubkey, truth_holder: Pubkey, price_feed_program: Pubkey, remove_claim_history: Pubkey) -> Result<()> {
     let admin = &mut ctx.accounts.admin.load_init()?;
     require!(!admin.init, ErrorCode::AlreadyInitialized);
     admin.init = true;
@@ -17,6 +17,7 @@ pub fn initialize(ctx: Context<Initialize>, global_withdraw_enabled: bool, hourl
     admin.counter_party = counter_party;
     admin.truth_holder = truth_holder;
     admin.price_feed_program = price_feed_program;
+    admin.remove_claim_history = remove_claim_history;
     emit!(InitializeEvent{
         init : true,
         global_withdraw_enabled : global_withdraw_enabled,
@@ -24,16 +25,18 @@ pub fn initialize(ctx: Context<Initialize>, global_withdraw_enabled: bool, hourl
         operator : operator,
         counter_party : counter_party,
         truth_holder : truth_holder,
-        price_feed_program:price_feed_program
+        price_feed_program:price_feed_program,
+        remove_claim_history:remove_claim_history
     });
 
-    msg!("InitializeEvent:init=true,globalWithdrawEnabled={},hourlyLimit={},operator={},counterParty={},truthHolder={},priceFeedProgram={}",
+    msg!("InitializeEvent:init=true,globalWithdrawEnabled={},hourlyLimit={},operator={},counterParty={},truthHolder={},priceFeedProgram={},removeClaimHistory={}",
     global_withdraw_enabled,
         hourly_limit,
         operator.key().to_string(),
         counter_party.key().to_string(),
         truth_holder.key().to_string(),
         price_feed_program.key().to_string(),
+        remove_claim_history.key().to_string()
     );
 
     Ok(())
@@ -164,6 +167,24 @@ pub fn change_price_feed_program(ctx: Context<UpdateAdmin>, price_feed_program: 
     Ok(())
 }
 
+pub fn change_remove_claim_history(ctx: Context<UpdateAdmin>, remove_claim_history: Pubkey) -> Result<()> {
+    let admin = &mut ctx.accounts.admin.load_mut()?;
+    let old_remove_claim_history = admin.remove_claim_history;
+    admin.remove_claim_history = remove_claim_history;
+
+    emit!(ChangeRemoveClaimHistoryEvent{
+        old_remove_claim_history : old_remove_claim_history,
+        new_remove_claim_history:remove_claim_history
+    });
+
+    msg!("ChangeRemoveClaimHistoryEvent:oldRemoveClaimHistory={},newRemoveClaimHistory={}",
+        old_remove_claim_history.key().to_string(),
+        remove_claim_history.key().to_string()
+    );
+
+    Ok(())
+}
+
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
@@ -203,12 +224,5 @@ pub struct Admin {
     pub claim_per_hour_cursor: u32,
     pub claim_per_hour_value: u64,
     pub price_feed_program: Pubkey,
-}
-
-#[zero_copy(unsafe)]
-#[derive(Debug, Eq, PartialEq)]
-#[repr(C)]
-pub struct ClaimHistoryItem {
-    pub idempotent: u32,
-    pub dead_line: u32,
+    pub remove_claim_history: Pubkey,
 }

@@ -16,14 +16,14 @@ use crate::token::*;
 use crate::sol::*;
 
 
-declare_id!("GerVDHW2N98Y2ssKGSfCwswYC9oF7gDrPHvRxtXek3TG");
+declare_id!("B3QEkbi6b6AAvXgUqpeWXBExVKYFEfU9psDqRdSgD76W");
 
 #[program]
 pub mod cloud_sol_treasury {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, withdraw_enabled: bool, hourly_limit: u64, operator: Pubkey, counter_party: Pubkey, truth_holder: Pubkey, price_feed_program: Pubkey) -> Result<()> {
-        return init::initialize(ctx, withdraw_enabled, hourly_limit, operator, counter_party, truth_holder, price_feed_program);
+    pub fn initialize(ctx: Context<Initialize>, withdraw_enabled: bool, hourly_limit: u64, operator: Pubkey, counter_party: Pubkey, truth_holder: Pubkey, price_feed_program: Pubkey,remove_claim_history: Pubkey) -> Result<()> {
+        return init::initialize(ctx, withdraw_enabled, hourly_limit, operator, counter_party, truth_holder, price_feed_program, remove_claim_history);
     }
 
     pub fn update_global_withdraw_enabled(ctx: Context<UpdateAdmin>, global_withdraw_enabled: bool) -> Result<()> {
@@ -54,12 +54,20 @@ pub mod cloud_sol_treasury {
         return init::change_price_feed_program(ctx, price_feed_program);
     }
 
+    pub fn change_remove_claim_history(ctx: Context<UpdateAdmin>, remove_claim_history: Pubkey) -> Result<()> {
+        return init::change_remove_claim_history(ctx, remove_claim_history);
+    }
+
     pub fn add_sol(ctx: Context<AddSol>, enabled: bool, sol_vault_bump: u8, price: u64, fixed_price: bool, price_decimals: u8, token_decimals: u8) -> Result<()> {
         return sol::add_sol(ctx, enabled, sol_vault_bump, price, fixed_price, price_decimals, token_decimals);
     }
 
     pub fn update_sol_enabled(ctx: Context<UpdateSolEnabled>, enabled: bool) -> Result<()> {
         return sol::update_sol_enabled(ctx, enabled);
+    }
+
+    pub fn remove_sol_claim_history(ctx: Context<RemoveSolClaimHistory>, idempotent_str: String) -> Result<()> {
+        return sol::remove_sol_claim_history(ctx, idempotent_str);
     }
 
     pub fn add_token(ctx: Context<AddToken>, enabled: bool, token_vault_authority_bump: u8, price: u64, fixed_price: bool, price_decimals: u8, token_decimals: u8) -> Result<()> {
@@ -70,6 +78,10 @@ pub mod cloud_sol_treasury {
         return token::update_token_enabled(ctx, enabled);
     }
 
+    pub fn remove_token_claim_history(ctx: Context<RemoveTokenClaimHistory>, idempotent_str: String) -> Result<()> {
+        return token::remove_token_claim_history(ctx, idempotent_str);
+    }
+
     pub fn deposit_sol(ctx: Context<DepositSol>, amount: u64) -> Result<()> {
         return deposit::deposit_sol(ctx, amount);
     }
@@ -78,11 +90,11 @@ pub mod cloud_sol_treasury {
         return deposit::deposit_token(ctx, amount);
     }
 
-    pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64, dead_line: u32, idempotent: u32) -> Result<()> {
+    pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64, dead_line: u32, idempotent: u64) -> Result<()> {
         return withdraw::withdraw_sol(ctx, amount, dead_line, idempotent);
     }
 
-    pub fn withdraw_sol_by_signature(ctx: Context<WithdrawSolBySignature>, amount: u64, dead_line: u32, idempotent: u32, signature: [u8; 64]) -> Result<()> {
+    pub fn withdraw_sol_by_signature(ctx: Context<WithdrawSolBySignature>, amount: u64, dead_line: u32, idempotent: u64, signature: [u8; 64]) -> Result<()> {
         return withdraw::withdraw_sol_by_signature(ctx, amount, dead_line, idempotent, signature);
     }
 
@@ -90,11 +102,11 @@ pub mod cloud_sol_treasury {
         return withdraw::withdraw_sol_to_counter_party(ctx, amount);
     }
 
-    pub fn withdraw_token(ctx: Context<WithdrawToken>, amount: u64, dead_line: u32, idempotent: u32) -> Result<()> {
+    pub fn withdraw_token(ctx: Context<WithdrawToken>, amount: u64, dead_line: u32, idempotent: u64) -> Result<()> {
         return withdraw::withdraw_token(ctx, amount, dead_line, idempotent);
     }
 
-    pub fn withdraw_token_by_signature(ctx: Context<WithdrawTokenBySignature>, amount: u64, dead_line: u32, idempotent: u32, signature: [u8; 64]) -> Result<()> {
+    pub fn withdraw_token_by_signature(ctx: Context<WithdrawTokenBySignature>, amount: u64, dead_line: u32, idempotent: u64, signature: [u8; 64]) -> Result<()> {
         return withdraw::withdraw_token_by_signature(ctx, amount, dead_line, idempotent, signature);
     }
 

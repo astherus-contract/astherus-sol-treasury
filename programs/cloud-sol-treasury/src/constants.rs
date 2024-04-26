@@ -14,3 +14,6 @@ pub const USD_DECIMALS: u8 = 8;
 
 #[constant]
 pub const COMMA: &str = ",";
+
+#[constant]
+pub const CLAIM_HISTORY_SIZE: usize = 800;

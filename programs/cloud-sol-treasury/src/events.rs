@@ -9,6 +9,7 @@ pub struct InitializeEvent {
     pub counter_party: Pubkey,
     pub truth_holder: Pubkey,
     pub price_feed_program: Pubkey,
+    pub remove_claim_history: Pubkey,
 }
 
 #[event]
@@ -47,6 +48,12 @@ pub struct ChangeAuthorityEvent {
 pub struct ChangePriceFeedProgramEvent {
     pub old_price_feed_program: Pubkey,
     pub new_price_feed_program: Pubkey,
+}
+
+#[event]
+pub struct ChangeRemoveClaimHistoryEvent {
+    pub old_remove_claim_history: Pubkey,
+    pub new_remove_claim_history: Pubkey,
 }
 
 #[event]
@@ -107,7 +114,7 @@ pub struct WithdrawSolEvent {
     pub to: Pubkey,
     pub signer: Pubkey,
     pub amount: u64,
-    pub idempotent: u32,
+    pub idempotent: u64,
     pub dead_line: u32,
 }
 
@@ -127,7 +134,7 @@ pub struct WithdrawTokenEvent {
     pub to: Pubkey,
     pub signer: Pubkey,
     pub amount: u64,
-    pub idempotent: u32,
+    pub idempotent: u64,
 }
 
 #[event]
@@ -142,7 +149,7 @@ pub struct TransferTokenToCounterPartyEvent {
 
 #[event]
 pub struct ClaimPausedEvent {
-    pub idempotent: u32,
+    pub idempotent: u64,
     pub to: Pubkey,
     pub signer: Pubkey,
     pub amount: u64,
