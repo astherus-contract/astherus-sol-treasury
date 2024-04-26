@@ -543,7 +543,7 @@ pub struct WithdrawToken<'info> {
     pub signer: Signer<'info>,
     #[account(mut, constraint = admin.load() ?.authority == * signer.key, has_one = price_feed_program)]
     pub admin: AccountLoader<'info, Admin>,
-    #[account(mut, has_one = token_vault_authority, has_one = admin, has_one = price_feed)]
+    #[account(mut, has_one = token_vault_authority, has_one = admin, has_one = price_feed, has_one = token_mint)]
     pub bank: AccountLoader<'info, Bank>,
 
     /// CHECK
@@ -552,7 +552,7 @@ pub struct WithdrawToken<'info> {
 
     #[account(mut, associated_token::mint = token_mint, associated_token::authority = token_vault_authority,)]
     pub token_vault: Account<'info, TokenAccount>,
-    #[account(mut)]
+    #[account(mut, constraint = receiver.mint == token_mint.key())]
     pub receiver: Account<'info, TokenAccount>,
 
     /// CHECK: We're reading data from this chainlink feed account
@@ -572,7 +572,7 @@ pub struct WithdrawTokenToCounterParty<'info> {
     pub signer: Signer<'info>,
     #[account(mut, constraint = admin.load() ?.operator == * signer.key)]
     pub admin: AccountLoader<'info, Admin>,
-    #[account(has_one = token_vault_authority, has_one = admin)]
+    #[account(has_one = token_vault_authority, has_one = admin, has_one = token_mint)]
     pub bank: AccountLoader<'info, Bank>,
 
     /// CHECK
@@ -581,7 +581,7 @@ pub struct WithdrawTokenToCounterParty<'info> {
 
     #[account(mut, associated_token::mint = token_mint, associated_token::authority = token_vault_authority,)]
     pub token_vault: Account<'info, TokenAccount>,
-    #[account(mut, constraint = admin.load() ?.counter_party == receiver.owner.key())]
+    #[account(mut, constraint = admin.load() ?.counter_party == receiver.owner.key(), constraint = receiver.mint == token_mint.key())]
     pub receiver: Account<'info, TokenAccount>,
 
     pub token_mint: Account<'info, Mint>,
@@ -596,7 +596,7 @@ pub struct WithdrawTokenBySignature<'info> {
     pub signer: Signer<'info>,
     #[account(mut, has_one = price_feed_program)]
     pub admin: AccountLoader<'info, Admin>,
-    #[account(mut, has_one = token_vault_authority, has_one = price_feed, has_one = admin)]
+    #[account(mut, has_one = token_vault_authority, has_one = price_feed, has_one = admin, has_one = token_mint)]
     pub bank: AccountLoader<'info, Bank>,
 
     /// CHECK
@@ -605,7 +605,7 @@ pub struct WithdrawTokenBySignature<'info> {
 
     #[account(mut, associated_token::mint = token_mint, associated_token::authority = token_vault_authority)]
     pub token_vault: Account<'info, TokenAccount>,
-    #[account(mut)]
+    #[account(mut, constraint = receiver.mint == token_mint.key())]
     pub receiver: Account<'info, TokenAccount>,
 
     /// CHECK: We're reading data from this chainlink feed account

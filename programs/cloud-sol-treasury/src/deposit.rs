@@ -112,7 +112,7 @@ pub struct DepositToken<'info> {
     #[account()]
     pub admin: AccountLoader<'info, Admin>,
 
-    #[account(has_one = token_vault_authority, has_one = admin)]
+    #[account(has_one = token_vault_authority, has_one = admin, has_one = token_mint)]
     pub bank: AccountLoader<'info, Bank>,
 
     /// CHECK
@@ -121,7 +121,7 @@ pub struct DepositToken<'info> {
 
     #[account(mut, associated_token::mint = token_mint, associated_token::authority = token_vault_authority,)]
     pub token_vault: Account<'info, TokenAccount>,
-    #[account(mut)]
+    #[account(mut, constraint = depositor.mint == token_mint.key())]
     pub depositor: Account<'info, TokenAccount>,
 
     pub token_mint: Account<'info, Mint>,
