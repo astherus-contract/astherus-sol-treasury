@@ -66,8 +66,8 @@ pub mod cloud_sol_treasury {
         return sol::update_sol_enabled(ctx, enabled);
     }
 
-    pub fn remove_sol_claim_history(ctx: Context<RemoveSolClaimHistory>, idempotent_str: String) -> Result<()> {
-        return sol::remove_sol_claim_history(ctx, idempotent_str);
+    pub fn remove_sol_claim_history(ctx: Context<RemoveSolClaimHistory>, index_str: String) -> Result<()> {
+        return sol::remove_sol_claim_history(ctx, index_str);
     }
 
     pub fn add_token(ctx: Context<AddToken>, enabled: bool, token_vault_authority_bump: u8, price: u64, fixed_price: bool, price_decimals: u8, token_decimals: u8) -> Result<()> {
@@ -78,8 +78,8 @@ pub mod cloud_sol_treasury {
         return token::update_token_enabled(ctx, enabled);
     }
 
-    pub fn remove_token_claim_history(ctx: Context<RemoveTokenClaimHistory>, idempotent_str: String) -> Result<()> {
-        return token::remove_token_claim_history(ctx, idempotent_str);
+    pub fn remove_token_claim_history(ctx: Context<RemoveTokenClaimHistory>, index_str: String) -> Result<()> {
+        return token::remove_token_claim_history(ctx, index_str);
     }
 
     pub fn deposit_sol(ctx: Context<DepositSol>, amount: u64) -> Result<()> {

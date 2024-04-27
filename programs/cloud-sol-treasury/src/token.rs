@@ -69,11 +69,11 @@ pub fn update_token_enabled(ctx: Context<UpdateTokenEnabled>, enabled: bool) -> 
     Ok(())
 }
 
-pub fn remove_token_claim_history(ctx: Context<RemoveTokenClaimHistory>, idempotent_str: String) -> Result<()> {
+pub fn remove_token_claim_history(ctx: Context<RemoveTokenClaimHistory>, index_str: String) -> Result<()> {
     let bank = &mut ctx.accounts.bank.load_mut()?;
     let current_timestamp = Clock::get()?.unix_timestamp as u32;
-    let idempotent_vec = idempotent_str.split(",").map(|x| x.parse().unwrap()).collect();
-    bank.remove_claim_history_item(idempotent_vec, current_timestamp);
+    let index_vec = index_str.split(",").map(|x| x.parse().unwrap()).collect();
+    bank.remove_claim_history_item(index_vec, current_timestamp);
     Ok(())
 }
 
@@ -169,14 +169,16 @@ impl Bank {
         return false;
     }
 
-    pub fn remove_claim_history_item(&mut self, idempotent_vec: Vec<u64>, current_timestamp: u32) {
-        for idempotent in idempotent_vec.iter() {
-            for n in 0..CLAIM_HISTORY_SIZE {
-                if self.idempotent[n] == *idempotent && self.dead_line[n] <= (current_timestamp - 120) {
-                    msg!("RemoveClaimHistoryEvent:idempotent={},deadLine={}",self.idempotent[n],self.dead_line[n]);
-                    self.idempotent[n] = 0;
-                    self.dead_line[n] = 0;
-                }
+    pub fn remove_claim_history_item(&mut self, index_vec: Vec<usize>, current_timestamp: u32) {
+        for index in index_vec.iter() {
+            let index = *index;
+            if index >= CLAIM_HISTORY_SIZE {
+                continue;
+            }
+            if self.dead_line[index] > 0 && self.dead_line[index] <= (current_timestamp - 120) {
+                msg!("RemoveClaimHistoryEvent:idempotent={},deadLine={}",self.idempotent[index],self.dead_line[index]);
+                self.idempotent[index] = 0;
+                self.dead_line[index] = 0;
             }
         }
     }

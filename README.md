@@ -35,7 +35,7 @@ program id
 solana transfer --from /Users/user/.config/solana/id.json 3Tw6dkrzSJx66jwX4evf9GoNXvnVv8dbMk2tjH9GsA8K 2 --allow-unfunded-recipient --url https://api.devnet.solana.com --fee-payer /Users/user/.config/solana/id.json
 
 
-solana program extend 8vDBbPQYPX3Q6CKKsdFkhNv4TtGDk3fBwkT3LsdukbSv 10000
+solana program extend B3QEkbi6b6AAvXgUqpeWXBExVKYFEfU9psDqRdSgD76W 10000
 
 
 solana program set-upgrade-authority
