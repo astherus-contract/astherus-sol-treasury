@@ -175,10 +175,13 @@ export async function prepareToken() {
             TOKEN_PROGRAM_ID
         );
         let userUsdtTokenAccount = await getOrCreateAssociatedTokenAccount(provider.connection, walletKeypair, mint.publicKey, walletKeypair.publicKey, false, undefined, undefined, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID)
+        savePublicKey(process.env.ANCHOR, 'userUsdtTokenAccount', userUsdtTokenAccount.address);
         await mintToChecked(provider.connection, walletKeypair, mint.publicKey, userUsdtTokenAccount.address, usdc_auth, 20000000000000e6, 0, [], undefined, TOKEN_PROGRAM_ID);
     }
 
     let userUsdtTokenAccount = await getOrCreateAssociatedTokenAccount(provider.connection, walletKeypair, mint.publicKey, walletKeypair.publicKey, false, undefined, undefined, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID)
+    savePublicKey(process.env.ANCHOR, 'userUsdtTokenAccount', userUsdtTokenAccount.address);
+
     tokenVault = getAssociatedTokenAddressSync(mint.publicKey, tokenVaultAuthority, true, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
     savePublicKey(process.env.ANCHOR, 'tokenVault', tokenVault);
     counterPartyToken = (await getOrCreateAssociatedTokenAccount(provider.connection, walletKeypair, mint.publicKey, counterPartyKeypair.publicKey, false, undefined, undefined, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID)).address;
@@ -667,7 +670,7 @@ async function doWithdrawSolBySignature(idempotent: anchor.BN, deadLine: number,
 }
 
 export async function removeSolClaimHistory() {
-    let arr='1111,222'
+    let arr='0,1,2,3,4,5,6,7,8,9,10'
     await program.methods.removeSolClaimHistory(arr).accounts({
         signer: removeClaimHistoryKeypair.publicKey,
         admin: admin,
@@ -679,8 +682,8 @@ export async function removeSolClaimHistory() {
         .catch(e => console.error(e))
 }
 
-export async function removeTokenClaimHistory(idempotents: String) {
-    await program.methods.removeTokenClaimHistory(idempotents).accounts({
+export async function removeTokenClaimHistory(indexes: String) {
+    await program.methods.removeTokenClaimHistory(indexes).accounts({
         signer: removeClaimHistoryKeypair.publicKey,
         admin: admin,
         bank: bankKeypair.publicKey,

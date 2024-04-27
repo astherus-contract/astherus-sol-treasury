@@ -41,7 +41,18 @@ solana program extend B3QEkbi6b6AAvXgUqpeWXBExVKYFEfU9psDqRdSgD76W 10000
 solana program set-upgrade-authority
 
 
-solana transfer --from /Users/user/.config/solana/id.json 31qHCx5zjuzB9ByW6Tnno9neHZeyQo6DTqLEMShHyjrj 2 --allow-unfunded-recipient --url https://api.devnet.solana.com --fee-payer /Users/user/.config/solana/id.json
+solana transfer --from /Users/user/.config/solana/id.json 31qHCx5zjuzB9ByW6Tnno9neHZeyQo6DTqLEMShHyjrj 1000000000 --allow-unfunded-recipient --url https://api.devnet.solana.com --fee-payer /Users/user/.config/solana/id.json
+
+spl-token accounts
+
+spl-token balance AQoKYV7tYpTrFZN6P5oUufbQKAUr9mNYGe1TTJC9wajM
+
+#spl-token transfer mint account amount token account
+spl-token transfer 8J531oLS35qshhirYUDvWfWGKkF6GgLTbtz1hknpDFaK 50 12YdYAkQM8E4DwGK3hoHborRXRV81Prg5nj15d1XBWcn
+
+# spl-token transfer --fund-recipient mint account amount to token account
+spl-token transfer --fund-recipient 8zgCwj99AKYu7fc6GQ9XUyEWWnJn38MATUUtACoVFSQt 50 4gvyqciCwRdcKEXbNTkKJ1yPDkXM1c1HdRttyGr4AMf2
+
 
 
 https://faucet.solana.com/

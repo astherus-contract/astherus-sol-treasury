@@ -639,7 +639,7 @@ describe("cloud-sol-treasury", () => {
     });
 
     it("remove sol claim history", async () => {
-        let arr='1111,222'
+        let arr='0,1,2,3,4,5,6,7,8,9,10'
         await program.methods.removeSolClaimHistory(arr).accounts({
             signer: removeClaimHistoryKeypair.publicKey,
             admin: admin,
@@ -652,7 +652,7 @@ describe("cloud-sol-treasury", () => {
     });
 
     it("remove token claim history", async () => {
-        let arr='1111,222'
+        let arr='0,1,2,3,4,5,6,7,8,9,10'
         await program.methods.removeTokenClaimHistory(arr).accounts({
             signer: removeClaimHistoryKeypair.publicKey,
             admin: admin,

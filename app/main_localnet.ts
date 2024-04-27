@@ -85,7 +85,7 @@ async function main() {
 
     await removeSolClaimHistory();
     console.log('removeSolClaimHistory Success');
-    await removeTokenClaimHistory('222,222');
+    await removeTokenClaimHistory('0,1,2,3,4,5,6,7,8,9,10');
     console.log('removeTokenClaimHistory Success');
 
     await getAllClaimHistory();
