@@ -122,10 +122,6 @@ fn do_withdraw_sol<'info>(signer: &Signer<'info>,
         return Err(ErrorCode::AlreadyClaimed.into());
     }
 
-    if !sol_vault.add_claim_history_item(idempotent, dead_line) {
-        return Err(ErrorCode::WithdrawalExceedsMaximumProcessingLimit.into());
-    }
-
     let amount_usd = amount_to_usd(sol_vault.fixed_price, sol_vault.price, sol_vault.price_decimals, sol_vault.token_decimals, amount, price_feed.to_account_info(), price_feed_program.to_account_info());
 
     let cursor = current_timestamp / (60 * 60);
@@ -156,6 +152,10 @@ fn do_withdraw_sol<'info>(signer: &Signer<'info>,
         //不应该抛出异常
         //return Err(ErrorCode::WithdrawalExceedsLimit.into());
         return Ok(());
+    }
+
+    if !sol_vault.add_claim_history_item(idempotent, dead_line) {
+        return Err(ErrorCode::WithdrawalExceedsMaximumProcessingLimit.into());
     }
 
     //sol_vault 是pda
@@ -326,12 +326,7 @@ fn do_withdraw_token<'info>(signer: &Signer<'info>,
         return Err(ErrorCode::AlreadyClaimed.into());
     }
 
-    if !bank.add_claim_history_item(idempotent, dead_line) {
-        return Err(ErrorCode::WithdrawalExceedsMaximumProcessingLimit.into());
-    }
-
     let amount_usd = amount_to_usd(bank.fixed_price, bank.price, bank.price_decimals, bank.token_decimals, amount, price_feed.to_account_info(), price_feed_program.to_account_info());
-
 
     let cursor = current_timestamp / (60 * 60);
     let per_hour_value;
@@ -361,6 +356,10 @@ fn do_withdraw_token<'info>(signer: &Signer<'info>,
         // 不应该抛出异常
         //return Err(ErrorCode::WithdrawalExceedsLimit.into());
         return Ok(());
+    }
+
+    if !bank.add_claim_history_item(idempotent, dead_line) {
+        return Err(ErrorCode::WithdrawalExceedsMaximumProcessingLimit.into());
     }
 
     let cpi_accounts = SplTransfer {
@@ -398,7 +397,7 @@ fn do_withdraw_token<'info>(signer: &Signer<'info>,
      idempotent:idempotent,
     });
 
-    msg!("WithdrawTokenEvent:token_mint={},bank={},from={},to={},signer={},amount={},idempotent={},deadLine={}",
+    msg!("WithdrawTokenEvent:tokenMint={},bank={},from={},to={},signer={},amount={},idempotent={},deadLine={}",
         bank.token_mint.to_string(),
         bank_pubkey.to_string(),
         token_vault.key().to_string(),
@@ -451,7 +450,7 @@ pub fn withdraw_token_to_counter_party(ctx: Context<WithdrawTokenToCounterParty>
      amount: amount,
     });
 
-    msg!("TransferTokenToCounterPartyEvent:token_mint={},bank={},from={},to={},signer={},amount={}",
+    msg!("TransferTokenToCounterPartyEvent:tokenMint={},bank={},from={},to={},signer={},amount={}",
         bank.token_mint.to_string(),
         ctx.accounts.bank.key().to_string(),
         ctx.accounts.token_vault.key().to_string(),

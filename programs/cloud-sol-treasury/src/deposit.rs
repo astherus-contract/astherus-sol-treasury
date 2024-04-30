@@ -83,7 +83,7 @@ pub fn deposit_token(ctx: Context<DepositToken>, amount: u64) -> Result<()> {
         amount: amount,
     });
 
-    msg!("DepositTokenEvent:token_mint={},bank={},from={},to={},signer={},amount={}",
+    msg!("DepositTokenEvent:tokenMint={},bank={},from={},to={},signer={},amount={}",
         bank.token_mint.to_string(),
         ctx.accounts.bank.key().to_string(),
         ctx.accounts.depositor.key().to_string(),

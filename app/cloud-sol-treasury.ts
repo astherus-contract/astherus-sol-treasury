@@ -14,6 +14,7 @@ import assert from "assert";
 import * as ed from "@noble/ed25519";
 import sleep from 'await-sleep'
 import * as borsh from 'borsh';
+import * as base58 from 'bs58';
 
 
 
@@ -365,6 +366,9 @@ export async function changeCounterParty() {
 }
 
 export async function changeTruthHolder() {
+    //let pub = new PublicKey(base58.encode(Uint8Array.from(Buffer.from('ee0b78103520825749376d462b15359316ef69472dda9a19e58b05de4eee8653', 'hex'))))
+    //walletKeypair.publicKey
+    //console.log(pub.toBase58())
     const tx = await program.methods.changeTruthHolder(walletKeypair.publicKey)
         .accounts({
             signer: walletKeypair.publicKey,
@@ -480,7 +484,6 @@ export async function withdrawToken() {
 }
 
 export async function withdrawTokenBySignature() {
-    await sleep(1000);
     let now = Date.now();
     let idempotent = new anchor.BN(now);
     let deadLine = parseInt((Date.now() / 1000 + 10).toString());

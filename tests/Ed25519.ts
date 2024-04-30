@@ -31,7 +31,10 @@ describe("ed25519 test", () => {
         //console.log("publicKey",Buffer.from(publicKey).toString('hex'))
 
         const signature = await ed.sign(message_hash, privateKey.slice(0, 32));
-        //console.log("signature", Buffer.from(signature).toString("hex"))
+        console.log("signature", Buffer.from(signature).toString("hex"))
+        console.log("signature", Buffer.from(signature).toString("hex").length)
+        console.log("signature", Buffer.from(signature).toJSON().data.length)
+
         const isValid = await ed.verify(signature, message_hash, publicKey);
         assert.ok(isValid)
     });
