@@ -1,5 +1,5 @@
 import {getOrCreateKeypair, createKeypair, getKeypair, saveKeypair, savePublicKey} from "./utils";
-import {Ed25519Program, PublicKey} from "@solana/web3.js";
+import {Ed25519Program, Keypair, PublicKey} from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {Program} from "@coral-xyz/anchor";
 import {CloudSolTreasury} from "../target/types/cloud_sol_treasury";
@@ -366,10 +366,10 @@ export async function changeCounterParty() {
 }
 
 export async function changeTruthHolder() {
-    //let pub = new PublicKey(base58.encode(Uint8Array.from(Buffer.from('ee0b78103520825749376d462b15359316ef69472dda9a19e58b05de4eee8653', 'hex'))))
+    let pub = new PublicKey(base58.encode(Uint8Array.from(Buffer.from('ee0b78103520825749376d462b15359316ef69472dda9a19e58b05de4eee8653', 'hex'))))
     //walletKeypair.publicKey
-    //console.log(pub.toBase58())
-    const tx = await program.methods.changeTruthHolder(walletKeypair.publicKey)
+   // console.log("pub.toBase58()",pub.toBase58())
+    const tx = await program.methods.changeTruthHolder(pub)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
@@ -543,6 +543,82 @@ export async function withdrawTokenBySignature() {
         ixSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
     }).preInstructions([Ed25519Program.createInstructionWithPublicKey({
         publicKey: publicKey,
+        message: messageHashUint8Array,
+        signature: signatureUint8Array,
+    })]).signers([walletKeypair]).rpc()
+    // .catch(e => console.error(e))
+
+    let tokenVaultAfter = await provider.connection.getTokenAccountBalance(tokenVault);
+    let receiverAfter = await provider.connection.getTokenAccountBalance(userToken);
+
+    assert.equal(new anchor.BN(tokenVaultBefore.value.amount).sub(new anchor.BN(tokenVaultAfter.value.amount)).toString(), amount.toString())
+    assert.equal(new anchor.BN(receiverAfter.value.amount).sub(new anchor.BN(receiverBefore.value.amount)).toString(), amount.toString())
+
+}
+
+export async function withdrawTokenBySignatureUserKey() {
+    let pub = new PublicKey(base58.encode(Uint8Array.from(Buffer.from('ee0b78103520825749376d462b15359316ef69472dda9a19e58b05de4eee8653', 'hex'))))
+    let userKeypair = Keypair.fromSecretKey(base58.decode('5ErtWur8wM4Zor8s2JBMQRWYDDujnowYQQ5n1N5SMigs5CDmNYFYapmyu8aZx3w6JNzeccXWMSmWW9NZs9v3rYmi'));
+    let idempotent = new anchor.BN(171449763829156);
+    let deadLine = parseInt((1714497758).toString());
+    let amount = new anchor.BN(5);
+
+    let userUsdtTokenAccount = await getOrCreateAssociatedTokenAccount(provider.connection, walletKeypair, mint.publicKey, userKeypair.publicKey, false, undefined, undefined, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID)
+    userToken=userUsdtTokenAccount.address;
+    let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
+    let receiverBefore = await provider.connection.getTokenAccountBalance(userToken);
+
+    const msg = Buffer.concat([
+        Buffer.from(idempotent.toString()),
+        Buffer.from(","),
+        admin.toBytes(),
+        Buffer.from(","),
+        Buffer.from(deadLine.toString()),
+        Buffer.from(","),
+        bankKeypair.publicKey.toBytes(),
+        Buffer.from(","),
+        Buffer.from(amount.toString()),
+        Buffer.from(","),
+        tokenVaultAuthority.toBytes(),
+        Buffer.from(","),
+        tokenVault.toBytes(),
+        Buffer.from(","),
+        userToken.toBytes(),
+        Buffer.from(","),
+        priceFeed.toBytes(),
+        Buffer.from(","),
+        priceFeedProgram.toBytes(),
+        Buffer.from(","),
+        mint.publicKey.toBytes()
+    ])
+
+    let messageHash = createKeccakHash('keccak256').update(msg).digest('hex')
+    let messageHashUint8Array = Buffer.from(messageHash, 'hex').valueOf()
+
+    const publicKey = new PublicKey(walletKeypair.publicKey.toBase58()).toBytes();
+    const privateKey = walletKeypair.secretKey;
+
+    const signatureUint8Array = await ed.sign(messageHashUint8Array, privateKey.slice(0, 32));
+    let signature = Buffer.from(signatureUint8Array).toString("hex");
+    const isValid = await ed.verify(signatureUint8Array, messageHashUint8Array, publicKey);
+    assert.ok(isValid)
+
+    let withdraw_token_tx = await program.methods.withdrawTokenBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array).toJSON().data).accounts({
+        signer: walletKeypair.publicKey,
+        admin: admin,
+        bank: bankKeypair.publicKey,
+        tokenVaultAuthority: tokenVaultAuthority,
+        tokenVault: tokenVault,
+        receiver: userToken,
+        priceFeed: priceFeed,
+        priceFeedProgram: priceFeedProgram,
+        tokenMint: mint.publicKey,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        ixSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+    }).preInstructions([Ed25519Program.createInstructionWithPublicKey({
+        publicKey: pub.toBytes(),
         message: messageHashUint8Array,
         signature: signatureUint8Array,
     })]).signers([walletKeypair]).rpc()
