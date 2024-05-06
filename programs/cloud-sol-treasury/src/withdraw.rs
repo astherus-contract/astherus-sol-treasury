@@ -74,7 +74,7 @@ pub fn withdraw_sol_by_signature(ctx: Context<WithdrawSolBySignature>, amount: u
             &ctx.accounts.price_feed_program.key().as_ref(),
         ]).to_bytes();
 
-        let ix: Instruction = load_instruction_at_checked(((load_current_index_checked(&ctx.accounts.ix_sysvar)? - 1) as usize), &ctx.accounts.ix_sysvar)?;
+        let ix: Instruction = load_instruction_at_checked((load_current_index_checked(&ctx.accounts.ix_sysvar)? - 1) as usize, &ctx.accounts.ix_sysvar)?;
 
         // Check that ix is what we expect to have been sent
         utils::verify_ed25519_ix(&ix, admin.truth_holder.as_ref(), &msg_hash, &signature)?;
@@ -279,7 +279,7 @@ pub fn withdraw_token_by_signature(ctx: Context<WithdrawTokenBySignature>, amoun
             &ctx.accounts.token_mint.key().as_ref(),
         ]).to_bytes();
 
-        let ix: Instruction = load_instruction_at_checked(((load_current_index_checked(&ctx.accounts.ix_sysvar)? - 1) as usize), &ctx.accounts.ix_sysvar)?;
+        let ix: Instruction = load_instruction_at_checked((load_current_index_checked(&ctx.accounts.ix_sysvar)? - 1) as usize, &ctx.accounts.ix_sysvar)?;
 
         // Check that ix is what we expect to have been sent
         utils::verify_ed25519_ix(&ix, admin.truth_holder.as_ref(), &msg_hash, &signature)?;

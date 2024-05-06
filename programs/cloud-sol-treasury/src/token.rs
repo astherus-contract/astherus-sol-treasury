@@ -13,7 +13,7 @@ use crate::init::*;
 use crate::constants;
 use crate::constants::CLAIM_HISTORY_SIZE;
 
-pub fn add_token(ctx: Context<AddToken>, enabled: bool, token_vault_authority_bump: u8,price: u64, fixed_price: bool, price_decimals: u8, token_decimals: u8) -> Result<()> {
+pub fn add_token(ctx: Context<AddToken>, enabled: bool, token_vault_authority_bump: u8, price: u64, fixed_price: bool, price_decimals: u8, token_decimals: u8) -> Result<()> {
     let bank = &mut ctx.accounts.bank.load_init()?;
     bank.admin = ctx.accounts.admin.key();
     bank.token_mint = ctx.accounts.token_mint.key();
@@ -107,7 +107,7 @@ pub struct UpdateTokenEnabled<'info> {
     pub signer: Signer<'info>,
     #[account(constraint = admin.load() ?.authority == * signer.key)]
     pub admin: AccountLoader<'info, Admin>,
-    #[account(mut,has_one = token_vault_authority, has_one = admin)]
+    #[account(mut, has_one = token_vault_authority, has_one = admin)]
     pub bank: AccountLoader<'info, Bank>,
 
     /// CHECK

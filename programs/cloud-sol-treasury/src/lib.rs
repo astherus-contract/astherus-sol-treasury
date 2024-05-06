@@ -22,7 +22,7 @@ declare_id!("B3QEkbi6b6AAvXgUqpeWXBExVKYFEfU9psDqRdSgD76W");
 pub mod cloud_sol_treasury {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, withdraw_enabled: bool, hourly_limit: u64, operator: Pubkey, counter_party: Pubkey, truth_holder: Pubkey, price_feed_program: Pubkey,remove_claim_history: Pubkey) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>, withdraw_enabled: bool, hourly_limit: u64, operator: Pubkey, counter_party: Pubkey, truth_holder: Pubkey, price_feed_program: Pubkey, remove_claim_history: Pubkey) -> Result<()> {
         return init::initialize(ctx, withdraw_enabled, hourly_limit, operator, counter_party, truth_holder, price_feed_program, remove_claim_history);
     }
 
