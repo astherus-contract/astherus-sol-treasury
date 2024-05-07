@@ -37,6 +37,8 @@ let bankKeypair;
 let walletKeypair;
 let operatorKeypair;
 let counterPartyKeypair;
+let operatorPublicKey;
+let counterPartyPublicKey;
 let testUserKeypair;
 let tokenPriceFeed;
 let solPriceFeed;
@@ -73,8 +75,15 @@ export async function loadProvider() {
 
 export async function loadCommonKeypair() {
     walletKeypair = programWallet;
-    counterPartyKeypair = getOrCreateKeypair(process.env.ANCHOR, 'counterParty');
-    operatorKeypair = getOrCreateKeypair(process.env.ANCHOR, 'operator');
+    if (process.env.ANCHOR == 'prod') {
+        counterPartyPublicKey = loadPublicKey(process.env.ANCHOR, 'counterParty');
+        operatorPublicKey = loadPublicKey(process.env.ANCHOR, 'operator');
+    } else {
+        counterPartyKeypair = getOrCreateKeypair(process.env.ANCHOR, 'counterParty');
+        operatorKeypair = getOrCreateKeypair(process.env.ANCHOR, 'operator');
+        counterPartyPublicKey = counterPartyKeypair.publicKey;
+        operatorPublicKey = operatorKeypair.publicKey;
+    }
 
     testUserKeypair = getOrCreateKeypair(process.env.ANCHOR, 'testUser');
 
@@ -140,13 +149,13 @@ export async function requestAirdropAll() {
         console.log(e)
     }
     try {
-        await requestAirdrop(operatorKeypair.publicKey);
+        await requestAirdrop(operatorPublicKey);
     } catch (e) {
         console.log(e)
     }
 
     try {
-        await requestAirdrop(counterPartyKeypair.publicKey);
+        await requestAirdrop(counterPartyPublicKey);
     } catch (e) {
         console.log(e)
     }
@@ -166,6 +175,9 @@ export async function prepareToken() {
         await getMint(provider.connection, tokenMintPublicKey, null, TOKEN_PROGRAM_ID);
     } catch (e) {
         // console.log(e)
+        if (process.env.ANCHOR == 'prod') {
+            throw new Error('prod env not auto create mint')
+        }
         if (e.toString().indexOf('TokenAccountNotFoundError') < 0) {
             throw e;
         }
@@ -190,7 +202,7 @@ export async function prepareToken() {
 
     tokenVault = getAssociatedTokenAddressSync(tokenMintPublicKey, tokenVaultAuthority, true, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
     savePublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'tokenVault', tokenVault);
-    counterPartyToken = (await getOrCreateAssociatedTokenAccount(provider.connection, walletKeypair, tokenMintPublicKey, counterPartyKeypair.publicKey, false, undefined, undefined, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID)).address;
+    counterPartyToken = (await getOrCreateAssociatedTokenAccount(provider.connection, walletKeypair, tokenMintPublicKey, counterPartyPublicKey, false, undefined, undefined, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID)).address;
     userToken = userTokenAccount.address;
 }
 
@@ -313,8 +325,8 @@ export async function withdrawSOL() {
     assert.equal(new anchor.BN(receiverAfter).sub(new anchor.BN(receiverBefore)).toString(), amount.toString())
 }
 
-export async function updateGlobalWithdrawEnabled() {
-    const tx = await program.methods.updateGlobalWithdrawEnabled(true)
+export async function updateGlobalWithdrawEnabled(enabled = true) {
+    const tx = await program.methods.updateGlobalWithdrawEnabled(enabled)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
@@ -327,8 +339,8 @@ export async function updateGlobalWithdrawEnabled() {
     // console.log(result);
 }
 
-export async function updateHourlyLimit() {
-    const tx = await program.methods.updateHourlyLimit(new anchor.BN(1000000e6))
+export async function updateHourlyLimit(hourlyLimit = new anchor.BN(1000000e6)) {
+    const tx = await program.methods.updateHourlyLimit(hourlyLimit)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
@@ -341,8 +353,8 @@ export async function updateHourlyLimit() {
     // console.log(result);
 }
 
-export async function changeOperator() {
-    const tx = await program.methods.changeOperator(operatorKeypair.publicKey)
+export async function changeOperator(publicKey = operatorPublicKey) {
+    const tx = await program.methods.changeOperator(publicKey)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
@@ -355,8 +367,8 @@ export async function changeOperator() {
     // console.log(result);
 }
 
-export async function changeCounterParty() {
-    const tx = await program.methods.changeCounterParty(counterPartyKeypair.publicKey)
+export async function changeCounterParty(publicKey = counterPartyPublicKey) {
+    const tx = await program.methods.changeCounterParty(publicKey)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
@@ -369,8 +381,8 @@ export async function changeCounterParty() {
     // console.log(result);
 }
 
-export async function changeTruthHolder(pub = walletKeypair.publicKey) {
-    const tx = await program.methods.changeTruthHolder(pub)
+export async function changeTruthHolder(publicKey = walletKeypair.publicKey) {
+    const tx = await program.methods.changeTruthHolder(publicKey)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
@@ -380,8 +392,8 @@ export async function changeTruthHolder(pub = walletKeypair.publicKey) {
     //console.log("Your transaction signature", tx);
 }
 
-export async function changeAuthority() {
-    const tx = await program.methods.changeAuthority(walletKeypair.publicKey)
+export async function changeAuthority(publicKey = walletKeypair.publicKey) {
+    const tx = await program.methods.changeAuthority(publicKey)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
@@ -392,8 +404,8 @@ export async function changeAuthority() {
 
 }
 
-export async function changePriceFeedProgram() {
-    const tx = await program.methods.changePriceFeedProgram(priceFeedProgram)
+export async function changePriceFeedProgram(publicKey = priceFeedProgram) {
+    const tx = await program.methods.changePriceFeedProgram(publicKey)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
@@ -401,8 +413,8 @@ export async function changePriceFeedProgram() {
         }).signers([walletKeypair]).rpc();
 }
 
-export async function updateTokenEnable() {
-    const tx = await program.methods.updateTokenEnabled(true)
+export async function updateTokenEnable(enabled = true) {
+    const tx = await program.methods.updateTokenEnabled(enabled)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
@@ -416,8 +428,8 @@ export async function updateTokenEnable() {
         }).signers([walletKeypair]).rpc();
 }
 
-export async function updateSolEnable() {
-    const tx = await program.methods.updateSolEnabled(true)
+export async function updateSolEnable(enabled = true) {
+    const tx = await program.methods.updateSolEnabled(enabled)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
@@ -645,20 +657,20 @@ export async function withdrawSOLBySignature() {
 export async function withdrawSOLToCounterParty() {
     let amount = new anchor.BN(1);
     let solVaultBefore = await provider.connection.getBalance(solVault);
-    let receiverBefore = await provider.connection.getBalance(counterPartyKeypair.publicKey);
+    let receiverBefore = await provider.connection.getBalance(counterPartyPublicKey);
 
     const withdraw_sol_tx = await program.methods.withdrawSolToCounterParty(amount)
         .accounts({
-            signer: operatorKeypair.publicKey,
+            signer: operatorPublicKey,
             admin: admin,
             solVault: solVault,
-            receiver: counterPartyKeypair.publicKey,
+            receiver: counterPartyPublicKey,
             systemProgram: anchor.web3.SystemProgram.programId,
         }).signers([operatorKeypair]).rpc({
             skipPreflight: true
         });
     let solVaultAfter = await provider.connection.getBalance(solVault);
-    let receiverAfter = await provider.connection.getBalance(counterPartyKeypair.publicKey);
+    let receiverAfter = await provider.connection.getBalance(counterPartyPublicKey);
 
     assert.equal(new anchor.BN(solVaultBefore).sub(new anchor.BN(solVaultAfter)).toString(), amount.toString())
     assert.equal(new anchor.BN(receiverAfter).sub(new anchor.BN(receiverBefore)).toString(), amount.toString())
@@ -670,7 +682,7 @@ export async function withdrawTokenToCounterParty() {
     let receiverBefore = await provider.connection.getTokenAccountBalance(counterPartyToken);
 
     let withdraw_token_tx = await program.methods.withdrawTokenToCounterParty(amount).accounts({
-        signer: operatorKeypair.publicKey,
+        signer: operatorPublicKey,
         admin: admin,
         bank: bankKeypair.publicKey,
         tokenVaultAuthority: tokenVaultAuthority,

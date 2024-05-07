@@ -4,7 +4,8 @@
         "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
         "start:localnet": "ts-node app/main_localnet.ts",
         "start": "ts-node app/main_localnet.ts",
-        "start:devnet": "ts-node app/main_devnet.ts"
+        "start:devnet": "ts-node app/main_devnet.ts",
+        "start:prodnet": "ts-node app/main_prodnet.ts"
     },
     "dependencies": {
         "@coral-xyz/anchor": "^0.29.0",

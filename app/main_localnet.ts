@@ -40,6 +40,12 @@ async function sol() {
     await updateHourlyLimit();
     console.log('updateHourlyLimit Success');
 
+    await changeOperator();
+    console.log('changeOperator Success');
+
+    await changeCounterParty();
+    console.log('changeCounterParty Success');
+
     await depositSOL();
     console.log('depositSOL Success');
     await withdrawSOL();

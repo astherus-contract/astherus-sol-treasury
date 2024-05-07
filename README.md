@@ -51,7 +51,7 @@ spl-token balance AQoKYV7tYpTrFZN6P5oUufbQKAUr9mNYGe1TTJC9wajM
 spl-token transfer 8J531oLS35qshhirYUDvWfWGKkF6GgLTbtz1hknpDFaK 50 12YdYAkQM8E4DwGK3hoHborRXRV81Prg5nj15d1XBWcn
 
 # spl-token transfer --fund-recipient mint account amount to token account
-spl-token transfer --fund-recipient GZsNHdewAAKkd86PJxGXfVdsb12t9ickDqjBmt6upVwp 500000 6xxWuMR82pw2U6akFEczzzrbpMocq636T6trJMXBEsdQ
+spl-token transfer --fund-recipient 8C1oFrAmKE47SYkjmi2Zce9uETzUuBof1RKnVyfDT6Tg 0.123456 ARk2v6GDEm4wNrWhLpxEQkHSyTSsBxzm5aX4XUfUATSm
 
 
 
