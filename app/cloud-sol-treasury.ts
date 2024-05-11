@@ -326,95 +326,131 @@ export async function withdrawSOL() {
 }
 
 export async function updateGlobalWithdrawEnabled(enabled = true) {
-    const tx = await program.methods.updateGlobalWithdrawEnabled(enabled)
+    const method = program.methods.updateGlobalWithdrawEnabled(enabled)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             systemProgram: anchor.web3.SystemProgram.programId,
-        }).signers([walletKeypair]).rpc();
-
-    //console.log("Your transaction signature", tx);
-
+        });
+    if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
+        let instruction = await method.instruction();
+        console.log("Your instruction", base58.encode(Uint8Array.from(instruction.data)));
+    } else {
+        const tx = await method.signers([walletKeypair]).rpc();
+        //console.log("Your transaction signature", tx);
+    }
     // let result = await program.account.admin.fetch(adminKeypair.publicKey);
     // console.log(result);
 }
 
-export async function updateHourlyLimit(hourlyLimit = new anchor.BN(1000000e6)) {
-    const tx = await program.methods.updateHourlyLimit(hourlyLimit)
+export async function updateHourlyLimit(hourlyLimit = new anchor.BN(10000e8)) {
+    const method = program.methods.updateHourlyLimit(hourlyLimit)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             systemProgram: anchor.web3.SystemProgram.programId,
-        }).signers([walletKeypair]).rpc();
+        });
 
-    //console.log("Your transaction signature", tx);
-
+    if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
+        let instruction = await method.instruction();
+        console.log("Your instruction", base58.encode(Uint8Array.from(instruction.data)));
+    } else {
+        const tx = await method.signers([walletKeypair]).rpc();
+        //console.log("Your transaction signature", tx);
+    }
     // let result = await program.account.admin.fetch(adminKeypair.publicKey);
     // console.log(result);
 }
 
 export async function changeOperator(publicKey = operatorPublicKey) {
-    const tx = await program.methods.changeOperator(publicKey)
+    const method = program.methods.changeOperator(publicKey)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             systemProgram: anchor.web3.SystemProgram.programId,
-        }).signers([walletKeypair]).rpc();
+        });
 
-    //console.log("Your transaction signature", tx);
-
+    if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
+        let instruction = await method.instruction();
+        console.log("Your instruction", base58.encode(Uint8Array.from(instruction.data)));
+    } else {
+        const tx = await method.signers([walletKeypair]).rpc();
+        //console.log("Your transaction signature", tx);
+    }
     // let result = await program.account.admin.fetch(adminKeypair.publicKey);
     // console.log(result);
 }
 
 export async function changeCounterParty(publicKey = counterPartyPublicKey) {
-    const tx = await program.methods.changeCounterParty(publicKey)
+    const method = program.methods.changeCounterParty(publicKey)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             systemProgram: anchor.web3.SystemProgram.programId,
-        }).signers([walletKeypair]).rpc();
+        });
 
-    //console.log("Your transaction signature", tx);
-
+    if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
+        let instruction = await method.instruction();
+        console.log("Your instruction", base58.encode(Uint8Array.from(instruction.data)));
+    } else {
+        const tx = await method.signers([walletKeypair]).rpc();
+        //console.log("Your transaction signature", tx);
+    }
     // let result = await program.account.admin.fetch(adminKeypair.publicKey);
     // console.log(result);
 }
 
 export async function changeTruthHolder(publicKey = walletKeypair.publicKey) {
-    const tx = await program.methods.changeTruthHolder(publicKey)
+    const method = program.methods.changeTruthHolder(publicKey)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             systemProgram: anchor.web3.SystemProgram.programId,
-        }).signers([walletKeypair]).rpc();
-
-    //console.log("Your transaction signature", tx);
+        });
+    if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
+        let instruction = await method.instruction();
+        console.log("Your instruction", base58.encode(Uint8Array.from(instruction.data)));
+    } else {
+        const tx = await method.signers([walletKeypair]).rpc();
+        //console.log("Your transaction signature", tx);
+    }
 }
 
 export async function changeAuthority(publicKey = walletKeypair.publicKey) {
-    const tx = await program.methods.changeAuthority(publicKey)
+    const method = program.methods.changeAuthority(publicKey)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             systemProgram: anchor.web3.SystemProgram.programId,
-        }).signers([walletKeypair]).rpc();
-
-    //console.log("Your transaction signature", tx);
-
+        });
+    if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
+        let instruction = await method.instruction();
+        console.log("Your instruction", base58.encode(Uint8Array.from(instruction.data)));
+    } else {
+        const tx = await method.signers([walletKeypair]).rpc();
+        //console.log("Your transaction signature", tx);
+    }
 }
 
 export async function changePriceFeedProgram(publicKey = priceFeedProgram) {
-    const tx = await program.methods.changePriceFeedProgram(publicKey)
+    const method = program.methods.changePriceFeedProgram(publicKey)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             systemProgram: anchor.web3.SystemProgram.programId,
-        }).signers([walletKeypair]).rpc();
+        });
+
+    if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
+        let instruction = await method.instruction();
+        console.log("Your instruction", base58.encode(Uint8Array.from(instruction.data)));
+    } else {
+        const tx = await method.signers([walletKeypair]).rpc();
+        //console.log("Your transaction signature", tx);
+    }
 }
 
 export async function updateTokenEnable(enabled = true) {
-    const tx = await program.methods.updateTokenEnabled(enabled)
+    const method = program.methods.updateTokenEnabled(enabled)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
@@ -425,17 +461,33 @@ export async function updateTokenEnable(enabled = true) {
             associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
             tokenProgram: TOKEN_PROGRAM_ID,
             systemProgram: anchor.web3.SystemProgram.programId,
-        }).signers([walletKeypair]).rpc();
+        });
+
+    if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
+        let instruction = await method.instruction();
+        console.log("Your instruction", base58.encode(Uint8Array.from(instruction.data)));
+    } else {
+        const tx = await method.signers([walletKeypair]).rpc();
+        //console.log("Your transaction signature", tx);
+    }
 }
 
 export async function updateSolEnable(enabled = true) {
-    const tx = await program.methods.updateSolEnabled(enabled)
+    const method = program.methods.updateSolEnabled(enabled)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
             solVault: solVault,
             systemProgram: anchor.web3.SystemProgram.programId,
-        }).signers([walletKeypair]).rpc();
+        });
+
+    if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
+        let instruction = await method.instruction();
+        console.log("Your instruction", base58.encode(Uint8Array.from(instruction.data)));
+    } else {
+        const tx = await method.signers([walletKeypair]).rpc();
+        //console.log("Your transaction signature", tx);
+    }
 }
 
 

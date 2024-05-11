@@ -25,6 +25,7 @@ process.env.ANCHOR_WALLET = '/Users/user/.config/solana/id.json'
 process.env.ANCHOR_PROVIDER_URL = 'http://127.0.0.1:8899'
 process.env.ANCHOR = 'local'
 const tokens = ['USDT', 'USDC'];
+process.env.ONLY_BUILD_INSTRUCTION = false
 
 async function sol() {
     console.log("Let's start SOL");

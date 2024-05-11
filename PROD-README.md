@@ -38,10 +38,12 @@
 ### npm run start:prodnet changeAuthority XXXX(PublicKey)
 
 ## 8.合约升级的authority转移
+### https://docs.squads.so/squads-v3-docs 用squads管理合约升级和一些管理员的一些操作
 ### 注意 authority 要有私钥，私钥正确保管，不能是pda
 ### solana program deploy --upgrade-authority <UPGRADE_AUTHORITY_SIGNER> <PROGRAM_FILEPATH>
 
 ## 9.其他操作
+### 提供squads需要的Data Raw 数据
 ### npm run start:prodnet changeTruthHolder XXXX(PublicKey)
 ### npm run start:prodnet changeCounterParty XXXX(PublicKey)
 ### npm run start:prodnet changeOperator XXXX(PublicKey)

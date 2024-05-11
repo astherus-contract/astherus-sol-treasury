@@ -29,6 +29,7 @@ process.env.ANCHOR_PROVIDER_URL = 'https://api.mainnet-beta.solana.com'
 // process.env.ANCHOR_PROVIDER_URL = 'http://127.0.0.1:8899'
 // process.env.ANCHOR = 'local'
 process.env.ANCHOR = 'prod'
+process.env.ONLY_BUILD_INSTRUCTION = true
 
 async function main() {
     console.log('process.argv', process.argv);
