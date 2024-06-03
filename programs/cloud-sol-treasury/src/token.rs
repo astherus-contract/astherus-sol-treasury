@@ -81,7 +81,7 @@ pub fn remove_token_claim_history(ctx: Context<RemoveTokenClaimHistory>, index_s
 pub struct AddToken<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
-    #[account(constraint = admin.load() ?.authority == * signer.key)]
+    #[account(constraint = admin.load() ?.authority == * signer.key, has_one = price_feed_program)]
     pub admin: AccountLoader<'info, Admin>,
     #[account(init, payer = signer, space = 8 + std::mem::size_of::< Bank > ())]
     pub bank: AccountLoader<'info, Bank>,

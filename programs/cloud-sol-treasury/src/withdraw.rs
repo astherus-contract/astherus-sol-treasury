@@ -469,6 +469,9 @@ fn amount_to_usd<'a>(fixed_price: bool, price: u64, price_decimals: u8, token_de
             price_feed_program,
             price_feed,
         ).unwrap();
+        if round.answer <= 0 {
+            return 0;
+        }
         price = round.answer as u128;
     }
     let amount_usd: u64 = (BigUint::from(price)

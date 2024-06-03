@@ -20,6 +20,7 @@ import {
 import {PublicKey, TokenAccountsFilter, ComputeBudgetProgram, Transaction, Ed25519Program} from "@solana/web3.js";
 import {equal} from "assert";
 import * as borsh from "borsh";
+import {printSolVaultInfo} from "../app/utils";
 
 describe("cloud-sol-treasury", () => {
     // Configure the client to use the local cluster.
@@ -711,10 +712,10 @@ describe("cloud-sol-treasury", () => {
         // console.log("getParsedTokenAccountsByOwner", walletKeypair.publicKey, await provider.connection.getParsedTokenAccountsByOwner(walletKeypair.publicKey, {
         //     programId: TOKEN_PROGRAM_ID,
         // }));
-        // console.log("solVault AccountInfo",await program.account.solVault.fetch(solVault));
+        console.log("solVault AccountInfo", await printSolVaultInfo((await provider.connection.getAccountInfo(solVault)).data));
 
-        // console.log("solVault AccountInfo",await program.account.bank.fetch(bankKeypair.publicKey));
-        console.log("solVault AccountInfo",await program.account.admin.fetch(admin));
+        console.log("bank AccountInfo",await program.account.bank.fetch(bankKeypair.publicKey));
+        // console.log("admin AccountInfo",await program.account.admin.fetch(admin));
 
     });
 

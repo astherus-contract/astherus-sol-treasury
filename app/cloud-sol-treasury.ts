@@ -858,3 +858,20 @@ export async function getTokenClaimHistory() {
 export async function getSolClaimHistory() {
     await getClaimHistory(solVault, "solVault");
 }
+
+export async function fetchAdmin() {
+    let result = await program.account.admin.fetch(admin);
+    console.log('fetchAdmin ', result);
+}
+
+export async function fetchBank() {
+    let result = await program.bank.fetch(bankKeypair.publicKey);
+    console.log('fetchBank ', result);
+}
+
+export async function fetchSolVault() {
+    let result = await program.account.solVault.fetch(solVault);
+    console.log('fetchSolVault ', result);
+}
+
+

@@ -72,7 +72,7 @@ pub fn remove_sol_claim_history(ctx: Context<RemoveSolClaimHistory>, index_str: 
 pub struct AddSol<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
-    #[account(mut, constraint = admin.load() ?.authority == * signer.key)]
+    #[account(mut, constraint = admin.load() ?.authority == * signer.key, has_one = price_feed_program)]
     pub admin: AccountLoader<'info, Admin>,
     #[account(init, payer = signer, space = 8 + std::mem::size_of::< SolVault > (), seeds = [constants::SOL_VAULT.as_bytes(), admin.key().as_ref()], bump)]
     pub sol_vault: AccountLoader<'info, SolVault>,
