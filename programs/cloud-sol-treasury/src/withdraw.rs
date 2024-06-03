@@ -22,31 +22,6 @@ use crate::utils;
 use crate::constants;
 use chainlink_solana as chainlink;
 
-
-pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64, dead_line: u32, idempotent: u64) -> Result<()> {
-    {
-        let admin = ctx.accounts.admin.load()?;
-        let sol_vault = ctx.accounts.sol_vault.load()?;
-
-        if !sol_vault.enabled || !admin.global_withdraw_enabled {
-            return Err(ErrorCode::DepositAndWithdrawalDisabled.into());
-        }
-    }
-
-    do_withdraw_sol(&ctx.accounts.signer,
-                    &ctx.accounts.admin,
-                    &ctx.accounts.sol_vault,
-                    &ctx.accounts.receiver,
-                    &ctx.accounts.price_feed,
-                    &ctx.accounts.price_feed_program,
-                    amount,
-                    dead_line,
-                    idempotent,
-    )?;
-
-    Ok(())
-}
-
 pub fn withdraw_sol_by_signature(ctx: Context<WithdrawSolBySignature>, amount: u64, dead_line: u32, idempotent: u64, signature: [u8; 64]) -> Result<()> {
     {
         let admin = ctx.accounts.admin.load()?;
@@ -213,34 +188,6 @@ pub fn withdraw_sol_to_counter_party(ctx: Context<WithdrawSolToCounterParty>, am
         ctx.accounts.signer.key().to_string(),
         amount
     );
-
-    Ok(())
-}
-
-//钱包发起交易上链
-pub fn withdraw_token(ctx: Context<WithdrawToken>, amount: u64, dead_line: u32, idempotent: u64) -> Result<()> {
-    {
-        let admin = ctx.accounts.admin.load()?;
-        let bank = ctx.accounts.bank.load()?;
-
-        if !bank.enabled || !admin.global_withdraw_enabled {
-            return Err(ErrorCode::DepositAndWithdrawalDisabled.into());
-        }
-    }
-
-    do_withdraw_token(&ctx.accounts.signer,
-                      &ctx.accounts.admin,
-                      &ctx.accounts.bank,
-                      &ctx.accounts.token_vault_authority,
-                      &ctx.accounts.token_vault,
-                      &ctx.accounts.receiver,
-                      &ctx.accounts.price_feed,
-                      &ctx.accounts.price_feed_program,
-                      &ctx.accounts.token_program,
-                      amount,
-                      dead_line,
-                      idempotent,
-    )?;
 
     Ok(())
 }
@@ -484,25 +431,6 @@ fn amount_to_usd<'a>(fixed_price: bool, price: u64, price_decimals: u8, token_de
 }
 
 #[derive(Accounts)]
-pub struct WithdrawSol<'info> {
-    #[account()]
-    pub signer: Signer<'info>,
-    #[account(mut, constraint = admin.load() ?.authority == * signer.key, has_one = price_feed_program)]
-    pub admin: AccountLoader<'info, Admin>,
-    #[account(mut, has_one = admin, has_one = price_feed, seeds = [constants::SOL_VAULT.as_bytes(), admin.key().as_ref()], bump = admin.load() ?.sol_vault_bump)]
-    pub sol_vault: AccountLoader<'info, SolVault>,
-    /// CHECK:
-    #[account(mut)]
-    pub receiver: UncheckedAccount<'info>,
-
-    /// CHECK: We're reading data from this chainlink feed account
-    pub price_feed: UncheckedAccount<'info>,
-    /// CHECK: This is the Chainlink program library
-    pub price_feed_program: UncheckedAccount<'info>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
 pub struct WithdrawSolBySignature<'info> {
     #[account()]
     pub signer: Signer<'info>,
@@ -536,35 +464,6 @@ pub struct WithdrawSolToCounterParty<'info> {
     /// CHECK:
     #[account(mut, constraint = admin.load() ?.counter_party == * receiver.key)]
     pub receiver: UncheckedAccount<'info>,
-    pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct WithdrawToken<'info> {
-    #[account()]
-    pub signer: Signer<'info>,
-    #[account(mut, constraint = admin.load() ?.authority == * signer.key, has_one = price_feed_program)]
-    pub admin: AccountLoader<'info, Admin>,
-    #[account(mut, has_one = token_vault_authority, has_one = admin, has_one = price_feed, has_one = token_mint)]
-    pub bank: AccountLoader<'info, Bank>,
-
-    /// CHECK
-    #[account(seeds = [constants::TOKEN_VAULT_AUTHORITY.as_bytes(), bank.key().as_ref()], bump = bank.load() ?.token_vault_authority_bump)]
-    pub token_vault_authority: UncheckedAccount<'info>,
-
-    #[account(mut, associated_token::mint = token_mint, associated_token::authority = token_vault_authority,)]
-    pub token_vault: Account<'info, TokenAccount>,
-    #[account(mut, constraint = receiver.mint == token_mint.key())]
-    pub receiver: Account<'info, TokenAccount>,
-
-    /// CHECK: We're reading data from this chainlink feed account
-    pub price_feed: UncheckedAccount<'info>,
-    /// CHECK: This is the Chainlink program library
-    pub price_feed_program: UncheckedAccount<'info>,
-
-    pub token_mint: Account<'info, Mint>,
-    pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
 }
 

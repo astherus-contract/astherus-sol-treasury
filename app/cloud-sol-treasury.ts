@@ -298,33 +298,6 @@ export async function depositSOL() {
     // assert.equal(new anchor.BN(depositorBefore).sub(new anchor.BN(depositorAfter)).toString(), amount.toString())
 }
 
-export async function withdrawSOL() {
-    let amount = new anchor.BN(10);
-    let solVaultBefore = await provider.connection.getBalance(solVault);
-    let receiverBefore = await provider.connection.getBalance(testUserKeypair.publicKey);
-
-    const withdraw_sol_tx = await program.methods.withdrawSol(amount, parseInt((Date.now() / 1000 + 10).toString()), new anchor.BN(Date.now()))
-        .accounts({
-            signer: walletKeypair.publicKey,
-            admin: admin,
-            solVault: solVault,
-            receiver: testUserKeypair.publicKey,
-            priceFeed: solPriceFeed,
-            priceFeedProgram: priceFeedProgram,
-            systemProgram: anchor.web3.SystemProgram.programId,
-        }).signers([walletKeypair]).rpc({
-            skipPreflight: true
-        })
-    //.catch(e => console.error(e))
-
-
-    let solVaultAfter = await provider.connection.getBalance(solVault);
-    let receiverAfter = await provider.connection.getBalance(testUserKeypair.publicKey);
-
-    assert.equal(new anchor.BN(solVaultBefore).sub(new anchor.BN(solVaultAfter)).toString(), amount.toString())
-    assert.equal(new anchor.BN(receiverAfter).sub(new anchor.BN(receiverBefore)).toString(), amount.toString())
-}
-
 export async function updateGlobalWithdrawEnabled(enabled = true) {
     const method = program.methods.updateGlobalWithdrawEnabled(enabled)
         .accounts({
@@ -517,34 +490,6 @@ export async function depositToken() {
 
     assert.equal(new anchor.BN(depositorBefore.value.amount).sub(new anchor.BN(depositorAfter.value.amount)).toString(), amount.toString())
     assert.equal(new anchor.BN(tokenVaultAfter.value.amount).sub(new anchor.BN(tokenVaultBefore.value.amount)).toString(), amount.toString())
-
-}
-
-export async function withdrawToken() {
-    let amount = new anchor.BN(1e6);
-    let tokenVaultBefore = await provider.connection.getTokenAccountBalance(tokenVault);
-    let receiverBefore = await provider.connection.getTokenAccountBalance(userToken);
-
-    let withdraw_token_tx = await program.methods.withdrawToken(amount, new anchor.BN(Date.now() / 1000 + 10), new anchor.BN(Date.now())).accounts({
-        signer: walletKeypair.publicKey,
-        admin: admin,
-        bank: bankKeypair.publicKey,
-        tokenVaultAuthority: tokenVaultAuthority,
-        tokenVault: tokenVault,
-        receiver: userToken,
-        priceFeed: tokenPriceFeed,
-        priceFeedProgram: priceFeedProgram,
-        tokenMint: tokenMintPublicKey,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: anchor.web3.SystemProgram.programId,
-    }).signers([walletKeypair]).rpc();
-
-    let tokenVaultAfter = await provider.connection.getTokenAccountBalance(tokenVault);
-    let receiverAfter = await provider.connection.getTokenAccountBalance(userToken);
-
-    assert.equal(new anchor.BN(tokenVaultBefore.value.amount).sub(new anchor.BN(tokenVaultAfter.value.amount)).toString(), amount.toString())
-    assert.equal(new anchor.BN(receiverAfter.value.amount).sub(new anchor.BN(receiverBefore.value.amount)).toString(), amount.toString())
 
 }
 

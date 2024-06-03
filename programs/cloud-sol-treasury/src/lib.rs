@@ -90,10 +90,6 @@ pub mod cloud_sol_treasury {
         return deposit::deposit_token(ctx, amount);
     }
 
-    // pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64, dead_line: u32, idempotent: u64) -> Result<()> {
-    //     return withdraw::withdraw_sol(ctx, amount, dead_line, idempotent);
-    // }
-
     pub fn withdraw_sol_by_signature(ctx: Context<WithdrawSolBySignature>, amount: u64, dead_line: u32, idempotent: u64, signature: [u8; 64]) -> Result<()> {
         return withdraw::withdraw_sol_by_signature(ctx, amount, dead_line, idempotent, signature);
     }
@@ -101,10 +97,6 @@ pub mod cloud_sol_treasury {
     pub fn withdraw_sol_to_counter_party(ctx: Context<WithdrawSolToCounterParty>, amount: u64) -> Result<()> {
         return withdraw::withdraw_sol_to_counter_party(ctx, amount);
     }
-
-    // pub fn withdraw_token(ctx: Context<WithdrawToken>, amount: u64, dead_line: u32, idempotent: u64) -> Result<()> {
-    //     return withdraw::withdraw_token(ctx, amount, dead_line, idempotent);
-    // }
 
     pub fn withdraw_token_by_signature(ctx: Context<WithdrawTokenBySignature>, amount: u64, dead_line: u32, idempotent: u64, signature: [u8; 64]) -> Result<()> {
         return withdraw::withdraw_token_by_signature(ctx, amount, dead_line, idempotent, signature);

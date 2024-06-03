@@ -12,10 +12,8 @@ import {
     requestAirdropAll,
     updateGlobalWithdrawEnabled,
     updateHourlyLimit, updateSolEnable, updateTokenEnable,
-    withdrawSOL,
     withdrawSOLBySignature,
     withdrawSOLToCounterParty,
-    withdrawToken,
     withdrawTokenBySignature,
     withdrawTokenToCounterParty,
 } from './cloud-sol-treasury';
@@ -49,8 +47,6 @@ async function sol() {
 
     await depositSOL();
     console.log('depositSOL Success');
-    await withdrawSOL();
-    console.log('withdrawSOL Success');
 
     await updateSolEnable();
     console.log('updateSolEnable Success');
@@ -107,9 +103,6 @@ async function token() {
 
         await depositToken();
         console.log('depositToken Success');
-
-        await withdrawToken();
-        console.log('withdrawToken Success');
 
         await withdrawTokenBySignature();
         console.log('withdrawTokenBySignature Success');
