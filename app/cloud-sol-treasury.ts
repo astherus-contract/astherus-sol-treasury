@@ -78,11 +78,13 @@ export async function loadCommonKeypair() {
     if (process.env.ANCHOR == 'prod') {
         counterPartyPublicKey = loadPublicKey(process.env.ANCHOR, 'counterParty');
         operatorPublicKey = loadPublicKey(process.env.ANCHOR, 'operator');
+        priceFeedProgram = loadPublicKey(process.env.ANCHOR, 'priceFeedProgram');
     } else {
         counterPartyKeypair = getOrCreateKeypair(process.env.ANCHOR, 'counterParty');
         operatorKeypair = getOrCreateKeypair(process.env.ANCHOR, 'operator');
         counterPartyPublicKey = counterPartyKeypair.publicKey;
         operatorPublicKey = operatorKeypair.publicKey;
+        priceFeedProgram = getOrCreatePublicKey(process.env.ANCHOR, 'priceFeedProgram');
     }
 
     testUserKeypair = getOrCreateKeypair(process.env.ANCHOR, 'testUser');
@@ -94,9 +96,6 @@ export async function loadCommonKeypair() {
     savePublicKey(process.env.ANCHOR, 'admin', admin);
 
     removeClaimHistoryKeypair = getOrCreateKeypair(process.env.ANCHOR, 'removeClaimHistory');
-
-    priceFeedProgram = getOrCreatePublicKey(process.env.ANCHOR, 'priceFeedProgram');
-
 }
 
 export async function loadSolKeypair() {
@@ -106,8 +105,11 @@ export async function loadSolKeypair() {
         program.programId);
     savePublicKey(process.env.ANCHOR, 'solVault', solVault);
 
-    solPriceFeed = getOrCreatePublicKey(process.env.ANCHOR, 'solPriceFeed');
-
+    if (process.env.ANCHOR == 'prod') {
+        solPriceFeed = loadPublicKey(process.env.ANCHOR, 'solPriceFeed');
+    } else {
+        solPriceFeed = getOrCreatePublicKey(process.env.ANCHOR, 'solPriceFeed');
+    }
 }
 
 
@@ -119,9 +121,12 @@ export async function loadTokenKeypair() {
         ],
         program.programId);
     savePublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'tokenVaultAuthority', tokenVaultAuthority);
-    tokenPriceFeed = getOrCreatePublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'priceFeed');
+    if (process.env.ANCHOR == 'prod') {
+        tokenPriceFeed = loadPublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'priceFeed');
+    } else {
+        tokenPriceFeed = getOrCreatePublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'priceFeed');
+    }
     tokenMintPublicKey = loadPublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'tokenMint');
-    // usdc_auth = getOrCreateKeypair(process.env.ANCHOR, 'usdc_auth');
 }
 
 
