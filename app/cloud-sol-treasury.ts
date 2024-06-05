@@ -34,6 +34,7 @@ let program;
 
 
 let bankKeypair;
+let bankPublicKey;
 let walletKeypair;
 let operatorKeypair;
 let counterPartyKeypair;
@@ -54,6 +55,7 @@ let tokenVault;
 let userToken;
 let counterPartyToken;
 let removeClaimHistoryKeypair
+let removeClaimHistoryPublicKey
 
 export async function loadProvider() {
     savePublicKey(process.env.ANCHOR, 'associatedTokenProgram', ASSOCIATED_TOKEN_PROGRAM_ID);
@@ -67,7 +69,7 @@ export async function loadProvider() {
     programWallet = getKeypair(process.env.ANCHOR, 'programWallet');
     if (programWallet == null) {
         programWallet = (provider.wallet as anchor.Wallet).payer;
-        saveKeypair(process.env.ANCHOR, 'programWallet', programWallet);
+        savePublicKey(process.env.ANCHOR, 'programWallet', programWallet.publicKey);
     }
     program = anchor.workspace.CloudSolTreasury as Program<CloudSolTreasury>;
     //console.log(program.programId)
@@ -79,15 +81,16 @@ export async function loadCommonKeypair() {
         counterPartyPublicKey = loadPublicKey(process.env.ANCHOR, 'counterParty');
         operatorPublicKey = loadPublicKey(process.env.ANCHOR, 'operator');
         priceFeedProgram = loadPublicKey(process.env.ANCHOR, 'priceFeedProgram');
+        removeClaimHistoryPublicKey = loadPublicKey(process.env.ANCHOR, 'removeClaimHistory');
     } else {
         counterPartyKeypair = getOrCreateKeypair(process.env.ANCHOR, 'counterParty');
         operatorKeypair = getOrCreateKeypair(process.env.ANCHOR, 'operator');
         counterPartyPublicKey = counterPartyKeypair.publicKey;
         operatorPublicKey = operatorKeypair.publicKey;
         priceFeedProgram = getOrCreatePublicKey(process.env.ANCHOR, 'priceFeedProgram');
+        removeClaimHistoryKeypair = getOrCreateKeypair(process.env.ANCHOR, 'removeClaimHistory');
+        testUserKeypair = getOrCreateKeypair(process.env.ANCHOR, 'testUser');
     }
-
-    testUserKeypair = getOrCreateKeypair(process.env.ANCHOR, 'testUser');
 
     [admin, admin_bump] = anchor.web3.PublicKey.findProgramAddressSync(
         [anchor.utils.bytes.utf8.encode("admin")
@@ -95,7 +98,6 @@ export async function loadCommonKeypair() {
         program.programId);
     savePublicKey(process.env.ANCHOR, 'admin', admin);
 
-    removeClaimHistoryKeypair = getOrCreateKeypair(process.env.ANCHOR, 'removeClaimHistory');
 }
 
 export async function loadSolKeypair() {
@@ -114,18 +116,24 @@ export async function loadSolKeypair() {
 
 
 export async function loadTokenKeypair() {
-    bankKeypair = getOrCreateKeypair(process.env.ANCHOR, process.env.tokenName + '-' + 'bank');
-    [tokenVaultAuthority, tokenVaultAuthorityBump] = anchor.web3.PublicKey.findProgramAddressSync(
-        [anchor.utils.bytes.utf8.encode("token_vault_authority"),
-            bankKeypair.publicKey.toBuffer()
-        ],
-        program.programId);
-    savePublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'tokenVaultAuthority', tokenVaultAuthority);
+    bankPublicKey = loadPublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'bank');
+    if (bankPublicKey == null) {
+        console.log('create bankKeypair')
+        bankKeypair = getOrCreateKeypair(process.env.ANCHOR, process.env.tokenName + '-' + 'bank');
+    }
+
     if (process.env.ANCHOR == 'prod') {
         tokenPriceFeed = loadPublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'priceFeed');
     } else {
         tokenPriceFeed = getOrCreatePublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'priceFeed');
     }
+
+    [tokenVaultAuthority, tokenVaultAuthorityBump] = anchor.web3.PublicKey.findProgramAddressSync(
+        [anchor.utils.bytes.utf8.encode("token_vault_authority"),
+            bankPublicKey.toBuffer()
+        ],
+        program.programId);
+    savePublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'tokenVaultAuthority', tokenVaultAuthority);
     tokenMintPublicKey = loadPublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'tokenMint');
 }
 
@@ -166,7 +174,7 @@ export async function requestAirdropAll() {
     }
 
     try {
-        await requestAirdrop(removeClaimHistoryKeypair.publicKey);
+        await requestAirdrop(removeClaimHistoryPublicKey);
     } catch (e) {
         console.log(e)
     }
@@ -202,20 +210,24 @@ export async function prepareToken() {
         savePublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'testTokenAccount', userTokenAccount.address);
         await mintToChecked(provider.connection, walletKeypair, tokenMintPublicKey, userTokenAccount.address, walletKeypair.publicKey, 20000000000000e6, 6, [], undefined, TOKEN_PROGRAM_ID);
     }
-    let userTokenAccount = await getOrCreateAssociatedTokenAccount(provider.connection, walletKeypair, tokenMintPublicKey, walletKeypair.publicKey, false, undefined, undefined, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID)
-    savePublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'testTokenAccount', userTokenAccount.address);
 
     tokenVault = getAssociatedTokenAddressSync(tokenMintPublicKey, tokenVaultAuthority, true, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
     savePublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'tokenVault', tokenVault);
-    counterPartyToken = (await getOrCreateAssociatedTokenAccount(provider.connection, walletKeypair, tokenMintPublicKey, counterPartyPublicKey, false, undefined, undefined, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID)).address;
-    userToken = userTokenAccount.address;
+
+    if (process.env.ANCHOR != 'prod') {
+        let userTokenAccount = await getOrCreateAssociatedTokenAccount(provider.connection, walletKeypair, tokenMintPublicKey, walletKeypair.publicKey, false, undefined, undefined, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID)
+        savePublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'testTokenAccount', userTokenAccount.address);
+
+        counterPartyToken = (await getOrCreateAssociatedTokenAccount(provider.connection, walletKeypair, tokenMintPublicKey, counterPartyPublicKey, false, undefined, undefined, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID)).address;
+        userToken = userTokenAccount.address;
+    }
 }
 
 export async function initialize() {
     if ((await provider.connection.getAccountInfo(admin)) != null) {
         return
     }
-    const tx = await program.methods.initialize(true, new anchor.BN(100e8), walletKeypair.publicKey, walletKeypair.publicKey, walletKeypair.publicKey, priceFeedProgram, removeClaimHistoryKeypair.publicKey)
+    const tx = await program.methods.initialize(true, new anchor.BN(100e8), walletKeypair.publicKey, walletKeypair.publicKey, walletKeypair.publicKey, priceFeedProgram, removeClaimHistoryPublicKey)
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
@@ -244,23 +256,25 @@ export async function addToken() {
     } catch (e) {
         if (e.toString().indexOf('Invalid param: could not find account') >= 0) {
             console.log('need init token')
-            console.log('delete bank keypair', bankKeypair.publicKey)
-            console.log('recreate bank', bankKeypair.publicKey)
-            bankKeypair = createKeypair(process.env.ANCHOR, process.env.tokenName + '-' + 'bank');
-            console.log('recreate tokenVaultAuthority');
-            [tokenVaultAuthority, tokenVaultAuthorityBump] = anchor.web3.PublicKey.findProgramAddressSync(
-                [anchor.utils.bytes.utf8.encode("token_vault_authority"),
-                    bankKeypair.publicKey.toBuffer()
-                ],
-                program.programId);
-            console.log('recreate tokenVault');
-            tokenVault = getAssociatedTokenAddressSync(tokenMintPublicKey, tokenVaultAuthority, true, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
+            // console.log('delete bank keypair', bankKeypair.publicKey)
+            // console.log('recreate bank', bankKeypair.publicKey)
+            // bankKeypair = createKeypair(process.env.ANCHOR, process.env.tokenName + '-' + 'bank');
+            // console.log('recreate tokenVaultAuthority');
+            // [tokenVaultAuthority, tokenVaultAuthorityBump] = anchor.web3.PublicKey.findProgramAddressSync(
+            //     [anchor.utils.bytes.utf8.encode("token_vault_authority"),
+            //         bankKeypair.publicKey.toBuffer()
+            //     ],
+            //     program.programId);
+            // console.log('recreate tokenVault');
+            //
+            //
+            // tokenVault = getAssociatedTokenAddressSync(tokenMintPublicKey, tokenVaultAuthority, true, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
 
             const tx = await program.methods.addToken(true, tokenVaultAuthorityBump, new anchor.BN(1e6), true, 6, 6)
                 .accounts({
                     signer: walletKeypair.publicKey,
                     admin: admin,
-                    bank: bankKeypair.publicKey,
+                    bank: bankPublicKey,
                     tokenVaultAuthority: tokenVaultAuthority,
                     tokenVault: tokenVault,
                     tokenMint: tokenMintPublicKey,
@@ -432,7 +446,7 @@ export async function updateTokenEnable(enabled = true) {
         .accounts({
             signer: walletKeypair.publicKey,
             admin: admin,
-            bank: bankKeypair.publicKey,
+            bank: bankPublicKey,
             tokenVaultAuthority: tokenVaultAuthority,
             tokenVault: tokenVault,
             tokenMint: tokenMintPublicKey,
@@ -478,7 +492,7 @@ export async function depositToken() {
         {
             signer: walletKeypair.publicKey,
             admin: admin,
-            bank: bankKeypair.publicKey,
+            bank: bankPublicKey,
             tokenVaultAuthority: tokenVaultAuthority,
             tokenVault: tokenVault,
             depositor: userToken,
@@ -514,7 +528,7 @@ export async function withdrawTokenBySignature() {
         Buffer.from(","),
         Buffer.from(deadLine.toString()),
         Buffer.from(","),
-        bankKeypair.publicKey.toBytes(),
+        bankPublicKey.toBytes(),
         Buffer.from(","),
         Buffer.from(amount.toString()),
         Buffer.from(","),
@@ -545,7 +559,7 @@ export async function withdrawTokenBySignature() {
     let withdraw_token_tx = await program.methods.withdrawTokenBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array).toJSON().data).accounts({
         signer: walletKeypair.publicKey,
         admin: admin,
-        bank: bankKeypair.publicKey,
+        bank: bankPublicKey,
         tokenVaultAuthority: tokenVaultAuthority,
         tokenVault: tokenVault,
         receiver: userToken,
@@ -590,7 +604,7 @@ export async function withdrawTokenBySignatureUserKey() {
         Buffer.from(","),
         Buffer.from(deadLine.toString()),
         Buffer.from(","),
-        bankKeypair.publicKey.toBytes(),
+        bankPublicKey.toBytes(),
         Buffer.from(","),
         Buffer.from(amount.toString()),
         Buffer.from(","),
@@ -621,7 +635,7 @@ export async function withdrawTokenBySignatureUserKey() {
     let withdraw_token_tx = await program.methods.withdrawTokenBySignature(amount, deadLine, idempotent, Buffer.from(signatureUint8Array).toJSON().data).accounts({
         signer: walletKeypair.publicKey,
         admin: admin,
-        bank: bankKeypair.publicKey,
+        bank: bankPublicKey,
         tokenVaultAuthority: tokenVaultAuthority,
         tokenVault: tokenVault,
         receiver: userToken,
@@ -686,7 +700,7 @@ export async function withdrawTokenToCounterParty() {
     let withdraw_token_tx = await program.methods.withdrawTokenToCounterParty(amount).accounts({
         signer: operatorPublicKey,
         admin: admin,
-        bank: bankKeypair.publicKey,
+        bank: bankPublicKey,
         tokenVaultAuthority: tokenVaultAuthority,
         tokenVault: tokenVault,
         receiver: counterPartyToken,
@@ -764,7 +778,7 @@ async function doWithdrawSolBySignature(idempotent: anchor.BN, deadLine: number,
 
 export async function removeSolClaimHistory(indexes: String) {
     await program.methods.removeSolClaimHistory(indexes).accounts({
-        signer: removeClaimHistoryKeypair.publicKey,
+        signer: removeClaimHistoryPublicKey,
         admin: admin,
         solVault: solVault,
         systemProgram: anchor.web3.SystemProgram.programId,
@@ -776,9 +790,9 @@ export async function removeSolClaimHistory(indexes: String) {
 
 export async function removeTokenClaimHistory(indexes: String) {
     await program.methods.removeTokenClaimHistory(indexes).accounts({
-        signer: removeClaimHistoryKeypair.publicKey,
+        signer: removeClaimHistoryPublicKey,
         admin: admin,
-        bank: bankKeypair.publicKey,
+        bank: bankPublicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
     }).signers([removeClaimHistoryKeypair]).rpc({
         skipPreflight: true
@@ -802,7 +816,7 @@ async function getClaimHistory(address: PublicKey, name: String) {
 }
 
 export async function getTokenClaimHistory() {
-    await getClaimHistory(bankKeypair.publicKey, process.env.tokenName + '-' + "bank");
+    await getClaimHistory(bankPublicKey, process.env.tokenName + '-' + "bank");
 }
 
 export async function getSolClaimHistory() {
@@ -815,7 +829,7 @@ export async function fetchAdmin() {
 }
 
 export async function fetchBank() {
-    let result = await program.bank.fetch(bankKeypair.publicKey);
+    let result = await program.bank.fetch(bankPublicKey);
     console.log('fetchBank ', result);
 }
 

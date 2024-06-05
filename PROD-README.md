@@ -2,6 +2,7 @@
 ## 1.准备环境
 ### https://docs.solanalabs.com/cli/install
 ### https://www.anchor-lang.com/docs/installation
+### https://docs.solanalabs.com/cli/usage
 ### git clone cloud-sol-treasury
 ### yarn install
 ### solana config set --url https://api.mainnet-beta.solana.com
@@ -11,6 +12,8 @@
 ### anchor keys sync
 ### anchor build
 ### solana program deploy <PROGRAM_FILEPATH>
+### solana program deploy --buffer ./bufferkey.json ./target/deploy/cloud_sol_treasury.so --with-compute-unit-price 100000
+### solana program deploy --buffer ./bufferkey.json ./target/deploy/cloud_sol_treasury.so --with-compute-unit-price 2000000
 
 ## 3.准备公钥
 ### 公共
@@ -52,3 +55,6 @@
 ### npm run start:prodnet updateGlobalWithdrawEnabled true
 ### npm run start:prodnet updateHourlyLimit 1000000
 ### npm run start:prodnet updateTokenEnable USDT true
+
+
+### npm run start:prodnet getTokenClaimHistory USDT

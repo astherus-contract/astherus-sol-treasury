@@ -12,10 +12,8 @@ import {
     requestAirdropAll,
     updateGlobalWithdrawEnabled,
     updateHourlyLimit, updateSolEnable, updateTokenEnable,
-    withdrawSOL,
     withdrawSOLBySignature,
     withdrawSOLToCounterParty,
-    withdrawToken,
     withdrawTokenBySignature,
     withdrawTokenToCounterParty,
 } from './cloud-sol-treasury';
@@ -25,11 +23,14 @@ import * as anchor from "@coral-xyz/anchor";
 
 const process = require("process");
 process.env.ANCHOR_WALLET = '/Users/user/.config/solana/id.json'
-process.env.ANCHOR_PROVIDER_URL = 'https://api.mainnet-beta.solana.com'
+//process.env.ANCHOR_PROVIDER_URL = 'https://api.mainnet-beta.solana.com'
+process.env.ANCHOR_PROVIDER_URL = 'https://solana-mainnet.rpc.extrnode.com/a08b89a8-bee8-46f4-ad88-98cb85ead8c6'
+
+
 // process.env.ANCHOR_PROVIDER_URL = 'http://127.0.0.1:8899'
 // process.env.ANCHOR = 'local'
 process.env.ANCHOR = 'prod'
-process.env.ONLY_BUILD_INSTRUCTION = true
+process.env.ONLY_BUILD_INSTRUCTION = false
 
 async function main() {
     console.log('process.argv', process.argv);
@@ -128,7 +129,7 @@ async function main() {
                 console.log('enabled is empty');
                 break
             }
-            await updateGlobalWithdrawEnabled(enabled);
+            await updateGlobalWithdrawEnabled(enabled == 'true');
             console.log('updateGlobalWithdrawEnabled Success');
             break
         }
@@ -150,7 +151,7 @@ async function main() {
             }
             await loadSolKeypair();
             console.log('loadSolKeypair Success');
-            await updateSolEnable(enabled);
+            await updateSolEnable(enabled == 'true');
             console.log('updateSolEnable Success');
             break
         }
@@ -173,8 +174,24 @@ async function main() {
 
             await prepareToken()
             console.log('prepareToken Success');
-            await updateTokenEnable(enabled);
+            await updateTokenEnable(enabled == 'true');
             console.log('updateTokenEnable Success');
+            break
+        }
+        case 'getTokenClaimHistory': {
+            let tokenName = process.argv[3];
+            if (tokenName == '' || tokenName == undefined) {
+                console.log('tokenName is empty');
+                break
+            }
+            process.env.tokenName = tokenName.trim();
+            await loadTokenKeypair();
+            console.log('loadTokenKeypair Success');
+
+            await prepareToken()
+            console.log('prepareToken Success');
+            await getTokenClaimHistory();
+            console.log('getTokenClaimHistory Success');
             break
         }
     }
