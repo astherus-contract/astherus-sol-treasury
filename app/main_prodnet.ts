@@ -23,8 +23,7 @@ import * as anchor from "@coral-xyz/anchor";
 
 const process = require("process");
 process.env.ANCHOR_WALLET = '/Users/user/.config/solana/id.json'
-//process.env.ANCHOR_PROVIDER_URL = 'https://api.mainnet-beta.solana.com'
-process.env.ANCHOR_PROVIDER_URL = 'https://solana-mainnet.rpc.extrnode.com/a08b89a8-bee8-46f4-ad88-98cb85ead8c6'
+process.env.ANCHOR_PROVIDER_URL = 'https://api.mainnet-beta.solana.com'
 
 
 // process.env.ANCHOR_PROVIDER_URL = 'http://127.0.0.1:8899'
