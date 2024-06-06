@@ -7,7 +7,7 @@ import {
     loadPublicKey,
     getOrCreatePublicKey
 } from "./utils";
-import {Ed25519Program, Keypair, PublicKey} from "@solana/web3.js";
+import {ComputeBudgetProgram, Ed25519Program, Keypair, PublicKey} from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {Program} from "@coral-xyz/anchor";
 import {CloudSolTreasury} from "../target/types/cloud_sol_treasury";
@@ -232,7 +232,9 @@ export async function initialize() {
             signer: walletKeypair.publicKey,
             admin: admin,
             systemProgram: anchor.web3.SystemProgram.programId,
-        }).signers([walletKeypair]).rpc();
+        }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 2000000,
+        })]).signers([walletKeypair]).rpc();
 }
 
 export async function addSol() {
@@ -247,7 +249,9 @@ export async function addSol() {
             priceFeed: solPriceFeed,
             priceFeedProgram: priceFeedProgram,
             systemProgram: anchor.web3.SystemProgram.programId,
-        }).signers([walletKeypair]).rpc();
+        }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 2000000,
+        })]).signers([walletKeypair]).rpc();
 }
 
 export async function addToken() {
@@ -283,7 +287,9 @@ export async function addToken() {
                     associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                     tokenProgram: TOKEN_PROGRAM_ID,
                     systemProgram: anchor.web3.SystemProgram.programId,
-                }).signers([bankKeypair, walletKeypair]).rpc();
+                }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+                    microLamports: 2000000,
+                })]).signers([bankKeypair, walletKeypair]).rpc();
 
             return;
         }
@@ -302,7 +308,9 @@ export async function depositSOL() {
             admin: admin,
             solVault: solVault,
             systemProgram: anchor.web3.SystemProgram.programId,
-        }).signers([walletKeypair]).rpc()
+        }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 2000000,
+        })]).signers([walletKeypair]).rpc()
     // .catch(e => console.error(e))
 
     //console.log(deposit_sol_tx);
@@ -323,7 +331,9 @@ export async function updateGlobalWithdrawEnabled(enabled = true) {
             signer: walletKeypair.publicKey,
             admin: admin,
             systemProgram: anchor.web3.SystemProgram.programId,
-        });
+        }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 2000000,
+        })]);
     if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
         let instruction = await method.instruction();
         console.log("Your instruction", base58.encode(Uint8Array.from(instruction.data)));
@@ -341,7 +351,9 @@ export async function updateHourlyLimit(hourlyLimit = new anchor.BN(10000e8)) {
             signer: walletKeypair.publicKey,
             admin: admin,
             systemProgram: anchor.web3.SystemProgram.programId,
-        });
+        }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 2000000,
+        })]);
 
     if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
         let instruction = await method.instruction();
@@ -360,7 +372,9 @@ export async function changeOperator(publicKey = operatorPublicKey) {
             signer: walletKeypair.publicKey,
             admin: admin,
             systemProgram: anchor.web3.SystemProgram.programId,
-        });
+        }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 2000000,
+        })]);
 
     if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
         let instruction = await method.instruction();
@@ -379,7 +393,9 @@ export async function changeCounterParty(publicKey = counterPartyPublicKey) {
             signer: walletKeypair.publicKey,
             admin: admin,
             systemProgram: anchor.web3.SystemProgram.programId,
-        });
+        }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 2000000,
+        })]);
 
     if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
         let instruction = await method.instruction();
@@ -398,7 +414,9 @@ export async function changeTruthHolder(publicKey = walletKeypair.publicKey) {
             signer: walletKeypair.publicKey,
             admin: admin,
             systemProgram: anchor.web3.SystemProgram.programId,
-        });
+        }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 2000000,
+        })]);
     if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
         let instruction = await method.instruction();
         console.log("Your instruction", base58.encode(Uint8Array.from(instruction.data)));
@@ -414,7 +432,9 @@ export async function changeAuthority(publicKey = walletKeypair.publicKey) {
             signer: walletKeypair.publicKey,
             admin: admin,
             systemProgram: anchor.web3.SystemProgram.programId,
-        });
+        }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 2000000,
+        })]);
     if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
         let instruction = await method.instruction();
         console.log("Your instruction", base58.encode(Uint8Array.from(instruction.data)));
@@ -430,7 +450,9 @@ export async function changePriceFeedProgram(publicKey = priceFeedProgram) {
             signer: walletKeypair.publicKey,
             admin: admin,
             systemProgram: anchor.web3.SystemProgram.programId,
-        });
+        }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 2000000,
+        })]);
 
     if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
         let instruction = await method.instruction();
@@ -453,7 +475,9 @@ export async function updateTokenEnable(enabled = true) {
             associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
             tokenProgram: TOKEN_PROGRAM_ID,
             systemProgram: anchor.web3.SystemProgram.programId,
-        });
+        }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 2000000,
+        })]);
 
     if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
         let instruction = await method.instruction();
@@ -471,7 +495,9 @@ export async function updateSolEnable(enabled = true) {
             admin: admin,
             solVault: solVault,
             systemProgram: anchor.web3.SystemProgram.programId,
-        });
+        }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 2000000,
+        })]);
 
     if (process.env.ONLY_BUILD_INSTRUCTION == 'true') {
         let instruction = await method.instruction();
@@ -502,7 +528,9 @@ export async function depositToken() {
             systemProgram: anchor.web3.SystemProgram.programId,
 
         }
-    ).signers([walletKeypair]).rpc();
+    ).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: 2000000,
+    })]).signers([walletKeypair]).rpc();
 
     let tokenVaultAfter = await provider.connection.getTokenAccountBalance(tokenVault);
     let depositorAfter = await provider.connection.getTokenAccountBalance(userToken);
@@ -570,7 +598,9 @@ export async function withdrawTokenBySignature() {
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
         ixSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
-    }).preInstructions([Ed25519Program.createInstructionWithPublicKey({
+    }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: 2000000,
+    }), Ed25519Program.createInstructionWithPublicKey({
         publicKey: publicKey,
         message: messageHashUint8Array,
         signature: signatureUint8Array,
@@ -646,7 +676,9 @@ export async function withdrawTokenBySignatureUserKey() {
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
         ixSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
-    }).preInstructions([Ed25519Program.createInstructionWithPublicKey({
+    }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: 2000000,
+    }), Ed25519Program.createInstructionWithPublicKey({
         publicKey: pub.toBytes(),
         message: messageHashUint8Array,
         signature: signatureUint8Array,
@@ -682,7 +714,9 @@ export async function withdrawSOLToCounterParty() {
             solVault: solVault,
             receiver: counterPartyPublicKey,
             systemProgram: anchor.web3.SystemProgram.programId,
-        }).signers([operatorKeypair]).rpc({
+        }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: 2000000,
+        })]).signers([operatorKeypair]).rpc({
             skipPreflight: true
         });
     let solVaultAfter = await provider.connection.getBalance(solVault);
@@ -708,7 +742,9 @@ export async function withdrawTokenToCounterParty() {
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
-    }).signers([operatorKeypair]).rpc({
+    }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: 2000000,
+    })]).signers([operatorKeypair]).rpc({
         skipPreflight: true
     });
 
@@ -762,7 +798,9 @@ async function doWithdrawSolBySignature(idempotent: anchor.BN, deadLine: number,
         priceFeedProgram: priceFeedProgram,
         systemProgram: anchor.web3.SystemProgram.programId,
         ixSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
-    }).preInstructions([Ed25519Program.createInstructionWithPublicKey({
+    }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: 2000000,
+    }), Ed25519Program.createInstructionWithPublicKey({
         publicKey: publicKey,
         message: messageHashUint8Array,
         signature: signatureUint8Array,
@@ -782,7 +820,9 @@ export async function removeSolClaimHistory(indexes: String) {
         admin: admin,
         solVault: solVault,
         systemProgram: anchor.web3.SystemProgram.programId,
-    }).signers([removeClaimHistoryKeypair]).rpc({
+    }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: 2000000,
+    })]).signers([removeClaimHistoryKeypair]).rpc({
         skipPreflight: true
     })
         .catch(e => console.error(e))
@@ -794,7 +834,9 @@ export async function removeTokenClaimHistory(indexes: String) {
         admin: admin,
         bank: bankPublicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
-    }).signers([removeClaimHistoryKeypair]).rpc({
+    }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: 2000000,
+    })]).signers([removeClaimHistoryKeypair]).rpc({
         skipPreflight: true
     })
 }
