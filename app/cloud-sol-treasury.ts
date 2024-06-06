@@ -70,6 +70,9 @@ export async function loadProvider() {
     if (programWallet == null) {
         programWallet = (provider.wallet as anchor.Wallet).payer;
         savePublicKey(process.env.ANCHOR, 'programWallet', programWallet.publicKey);
+        if (process.env.ANCHOR != 'prod') {
+            saveKeypair(process.env.ANCHOR, 'programWallet', programWallet);
+        }
     }
     program = anchor.workspace.CloudSolTreasury as Program<CloudSolTreasury>;
     //console.log(program.programId)
@@ -90,6 +93,8 @@ export async function loadCommonKeypair() {
         priceFeedProgram = getOrCreatePublicKey(process.env.ANCHOR, 'priceFeedProgram');
         removeClaimHistoryKeypair = getOrCreateKeypair(process.env.ANCHOR, 'removeClaimHistory');
         testUserKeypair = getOrCreateKeypair(process.env.ANCHOR, 'testUser');
+        removeClaimHistoryPublicKey = removeClaimHistoryKeypair.publicKey;
+
     }
 
     [admin, admin_bump] = anchor.web3.PublicKey.findProgramAddressSync(
@@ -117,9 +122,11 @@ export async function loadSolKeypair() {
 
 export async function loadTokenKeypair() {
     bankPublicKey = loadPublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'bank');
+    bankKeypair = getKeypair(process.env.ANCHOR, process.env.tokenName + '-' + 'bank');
     if (bankPublicKey == null) {
         console.log('create bankKeypair')
         bankKeypair = getOrCreateKeypair(process.env.ANCHOR, process.env.tokenName + '-' + 'bank');
+        bankPublicKey = bankKeypair.publicKey;
     }
 
     if (process.env.ANCHOR == 'prod') {

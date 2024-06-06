@@ -14,8 +14,8 @@ cloud_sol_treasury = "B3QEkbi6b6AAvXgUqpeWXBExVKYFEfU9psDqRdSgD76W"
 url = "https://api.apr.dev"
 
 [provider]
-#cluster = "Localnet"
-cluster = "Devnet"
+cluster = "Localnet"
+#cluster = "Devnet"
 #cluster = "Mainnet"
 
 wallet = "/Users/user/.config/solana/id.json"
