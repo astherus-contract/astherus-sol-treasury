@@ -53,7 +53,7 @@
 ### npm run start:prodnet changePriceFeedProgram XXXX(PublicKey)
 
 ### npm run start:prodnet updateGlobalWithdrawEnabled true
-### npm run start:prodnet updateHourlyLimit 1000000
+### npm run start:prodnet updateHourlyLimit 1000000    #1USDT=1e8
 ### npm run start:prodnet updateTokenEnable USDT true
 
 
