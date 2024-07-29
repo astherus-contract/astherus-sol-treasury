@@ -16,7 +16,7 @@ use crate::token::*;
 use crate::sol::*;
 
 
-declare_id!("B3QEkbi6b6AAvXgUqpeWXBExVKYFEfU9psDqRdSgD76W");
+declare_id!("84TXgBFKAy7xixMAjLmqbVxQ5WTYtobx64sXh19bBRhc");
 
 #[program]
 pub mod cloud_sol_treasury {
