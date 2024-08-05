@@ -75,7 +75,6 @@ export async function loadProvider() {
         }
     }
     program = anchor.workspace.CloudSolTreasury as Program<CloudSolTreasury>;
-    //console.log(program.programId)
 }
 
 export async function loadCommonKeypair() {
@@ -90,7 +89,11 @@ export async function loadCommonKeypair() {
         operatorKeypair = getOrCreateKeypair(process.env.ANCHOR, 'operator');
         counterPartyPublicKey = counterPartyKeypair.publicKey;
         operatorPublicKey = operatorKeypair.publicKey;
-        priceFeedProgram = getOrCreatePublicKey(process.env.ANCHOR, 'priceFeedProgram');
+        if (process.env.ANCHOR == 'dev') {
+            priceFeedProgram = loadPublicKey(process.env.ANCHOR, 'priceFeedProgram');
+        } else {
+            priceFeedProgram = getOrCreatePublicKey(process.env.ANCHOR, 'priceFeedProgram');
+        }
         removeClaimHistoryKeypair = getOrCreateKeypair(process.env.ANCHOR, 'removeClaimHistory');
         testUserKeypair = getOrCreateKeypair(process.env.ANCHOR, 'testUser');
         removeClaimHistoryPublicKey = removeClaimHistoryKeypair.publicKey;
@@ -115,7 +118,11 @@ export async function loadSolKeypair() {
     if (process.env.ANCHOR == 'prod') {
         solPriceFeed = loadPublicKey(process.env.ANCHOR, 'solPriceFeed');
     } else {
-        solPriceFeed = getOrCreatePublicKey(process.env.ANCHOR, 'solPriceFeed');
+        if (process.env.ANCHOR == 'dev') {
+            solPriceFeed = loadPublicKey(process.env.ANCHOR, 'solPriceFeed');
+        } else {
+            solPriceFeed = getOrCreatePublicKey(process.env.ANCHOR, 'solPriceFeed');
+        }
     }
 }
 
@@ -129,7 +136,7 @@ export async function loadTokenKeypair() {
         bankPublicKey = bankKeypair.publicKey;
     }
 
-    if (process.env.ANCHOR == 'prod') {
+    if (process.env.ANCHOR == 'prod' || process.env.ANCHOR == 'dev') {
         tokenPriceFeed = loadPublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'priceFeed');
     } else {
         tokenPriceFeed = getOrCreatePublicKey(process.env.ANCHOR, process.env.tokenName + '-' + 'priceFeed');
@@ -234,6 +241,10 @@ export async function initialize() {
     if ((await provider.connection.getAccountInfo(admin)) != null) {
         return
     }
+    if (priceFeedProgram == null) {
+        console.log("priceFeedProgram 未配置")
+        return
+    }
     const tx = await program.methods.initialize(true, new anchor.BN(100e8), walletKeypair.publicKey, walletKeypair.publicKey, walletKeypair.publicKey, priceFeedProgram, removeClaimHistoryPublicKey)
         .accounts({
             signer: walletKeypair.publicKey,
@@ -248,17 +259,31 @@ export async function addSol() {
     if ((await provider.connection.getAccountInfo(solVault)) != null) {
         return
     }
-    const tx = await program.methods.addSol(true, solVaultBump, new anchor.BN(1e6), true, 6, 9)
-        .accounts({
-            signer: walletKeypair.publicKey,
-            admin: admin,
-            solVault: solVault,
-            priceFeed: solPriceFeed,
-            priceFeedProgram: priceFeedProgram,
-            systemProgram: anchor.web3.SystemProgram.programId,
-        }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
-            microLamports: 2000000,
-        })]).signers([walletKeypair]).rpc();
+    if (process.env.ANCHOR == 'prod' || process.env.ANCHOR == 'dev') {
+        const tx = await program.methods.addSol(true, solVaultBump, new anchor.BN(1e8), false, 8, 9)
+            .accounts({
+                signer: walletKeypair.publicKey,
+                admin: admin,
+                solVault: solVault,
+                priceFeed: solPriceFeed,
+                priceFeedProgram: priceFeedProgram,
+                systemProgram: anchor.web3.SystemProgram.programId,
+            }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+                microLamports: 2000000,
+            })]).signers([walletKeypair]).rpc();
+    } else {
+        const tx = await program.methods.addSol(true, solVaultBump, new anchor.BN(1e6), true, 6, 9)
+            .accounts({
+                signer: walletKeypair.publicKey,
+                admin: admin,
+                solVault: solVault,
+                priceFeed: solPriceFeed,
+                priceFeedProgram: priceFeedProgram,
+                systemProgram: anchor.web3.SystemProgram.programId,
+            }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+                microLamports: 2000000,
+            })]).signers([walletKeypair]).rpc();
+    }
 }
 
 export async function addToken() {
@@ -281,22 +306,67 @@ export async function addToken() {
             //
             // tokenVault = getAssociatedTokenAddressSync(tokenMintPublicKey, tokenVaultAuthority, true, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
 
-            const tx = await program.methods.addToken(true, tokenVaultAuthorityBump, new anchor.BN(1e6), true, 6, 6)
-                .accounts({
-                    signer: walletKeypair.publicKey,
-                    admin: admin,
-                    bank: bankPublicKey,
-                    tokenVaultAuthority: tokenVaultAuthority,
-                    tokenVault: tokenVault,
-                    tokenMint: tokenMintPublicKey,
-                    priceFeed: tokenPriceFeed,
-                    priceFeedProgram: priceFeedProgram,
-                    associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-                    tokenProgram: TOKEN_PROGRAM_ID,
-                    systemProgram: anchor.web3.SystemProgram.programId,
-                }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
-                    microLamports: 2000000,
-                })]).signers([bankKeypair, walletKeypair]).rpc();
+            let price
+            let fixed_price
+            let price_decimals
+            if (process.env.ANCHOR == 'local') {
+                price = new anchor.BN(1e6)
+                fixed_price = true
+                price_decimals = 6
+            } else {
+                if (process.env.tokenName == 'USDT' || process.env.tokenName == 'USDC') {
+                    price = new anchor.BN(1e6)
+                    fixed_price = true
+                    price_decimals = 6
+                } else if (process.env.tokenName == 'ETH') {
+                    price = new anchor.BN(1e8)
+                    fixed_price = false
+                    price_decimals = 8
+                } else if (process.env.tokenName == 'JLP') {
+                    price = new anchor.BN(2.8e8)
+                    fixed_price = true
+                    price_decimals = 8
+                } else {
+                    console.log('未实现 ' + process.env.tokenName);
+                    return
+                }
+            }
+
+            if (process.env.ANCHOR == 'prod' || process.env.ANCHOR == 'dev') {
+                await program.methods.addToken(true, tokenVaultAuthorityBump, price, fixed_price, price_decimals, 6)
+                    .accounts({
+                        signer: walletKeypair.publicKey,
+                        admin: admin,
+                        bank: bankPublicKey,
+                        tokenVaultAuthority: tokenVaultAuthority,
+                        tokenVault: tokenVault,
+                        tokenMint: tokenMintPublicKey,
+                        priceFeed: tokenPriceFeed,
+                        priceFeedProgram: priceFeedProgram,
+                        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                        tokenProgram: TOKEN_PROGRAM_ID,
+                        systemProgram: anchor.web3.SystemProgram.programId,
+                    }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+                        microLamports: 2000000,
+                    })]).signers([bankKeypair, walletKeypair]).rpc();
+            } else {
+                await program.methods.addToken(true, tokenVaultAuthorityBump, new anchor.BN(1e6), true, 6, 6)
+                    .accounts({
+                        signer: walletKeypair.publicKey,
+                        admin: admin,
+                        bank: bankPublicKey,
+                        tokenVaultAuthority: tokenVaultAuthority,
+                        tokenVault: tokenVault,
+                        tokenMint: tokenMintPublicKey,
+                        priceFeed: tokenPriceFeed,
+                        priceFeedProgram: priceFeedProgram,
+                        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                        tokenProgram: TOKEN_PROGRAM_ID,
+                        systemProgram: anchor.web3.SystemProgram.programId,
+                    }).preInstructions([ComputeBudgetProgram.setComputeUnitPrice({
+                        microLamports: 2000000,
+                    })]).signers([bankKeypair, walletKeypair]).rpc();
+            }
 
             return;
         }

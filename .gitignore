@@ -23,4 +23,5 @@ test-ledger
 .yarn
 .idea
 
-app/secret/local/*
+app/secret/apx/local/*
+app/secret/astherus/local/*

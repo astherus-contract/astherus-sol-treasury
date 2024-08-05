@@ -19,13 +19,18 @@ import {
 } from './cloud-sol-treasury';
 import {PublicKey} from "@solana/web3.js";
 import base58 from "bs58";
+import * as anchor from "@coral-xyz/anchor";
 
 const process = require("process");
 process.env.ANCHOR_WALLET = '/Users/user/.config/solana/id.json'
 process.env.ANCHOR_PROVIDER_URL = 'https://api.devnet.solana.com'
 process.env.ANCHOR = 'dev'
-const tokens = ['USDT', 'USDC'];
+const tokens = ['USDT', 'USDC','ETH','JLP'];
 process.env.ONLY_BUILD_INSTRUCTION = false
+const truthHolderAstherus = "851f128f86ef049ec34e4c3ba73af8e3ad0a40f095c9d8c56fd3fcd4e4c72f22"
+const truthHolderApx = "ee0b78103520825749376d462b15359316ef69472dda9a19e58b05de4eee8653"
+const truthHolder = truthHolderAstherus
+
 
 async function sol() {
     console.log("Let's start SOL");
@@ -38,7 +43,7 @@ async function sol() {
     await updateGlobalWithdrawEnabled();
     console.log('updateGlobalWithdrawEnabled Success');
 
-    await updateHourlyLimit();
+    await updateHourlyLimit(new anchor.BN(10000000e8));
     console.log('updateHourlyLimit Success');
 
     await changeOperator();
@@ -85,7 +90,7 @@ async function token() {
         await updateGlobalWithdrawEnabled();
         console.log('updateGlobalWithdrawEnabled Success');
 
-        await updateHourlyLimit();
+        await updateHourlyLimit(new anchor.BN(10000000e8));
         console.log('updateHourlyLimit Success');
 
         await changeOperator();
@@ -144,9 +149,9 @@ async function main() {
     //token
     await token();
 
-    let pub = new PublicKey(base58.encode(Uint8Array.from(Buffer.from('ee0b78103520825749376d462b15359316ef69472dda9a19e58b05de4eee8653', 'hex'))))
+    let pub = new PublicKey(base58.encode(Uint8Array.from(Buffer.from(truthHolder, 'hex'))))
     await changeTruthHolder(pub);
-    console.log('changeTruthHolder Success');
+    console.log('changeTruthHolder Success,pub ' + pub.toBase58());
 
     console.log('all Success');
 }
@@ -154,7 +159,7 @@ async function main() {
 main().then(
     () => process.exit(),
     async err => {
-        let pub = new PublicKey(base58.encode(Uint8Array.from(Buffer.from('ee0b78103520825749376d462b15359316ef69472dda9a19e58b05de4eee8653', 'hex'))))
+        let pub = new PublicKey(base58.encode(Uint8Array.from(Buffer.from(truthHolder, 'hex'))))
         await changeTruthHolder(pub);
         console.log('changeTruthHolder Success');
         console.error(err);
