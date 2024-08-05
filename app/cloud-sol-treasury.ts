@@ -323,7 +323,7 @@ export async function addToken() {
                     fixed_price = false
                     price_decimals = 8
                 } else if (process.env.tokenName == 'JLP') {
-                    price = new anchor.BN(3.3e8)
+                    price = new anchor.BN(2.8e8)
                     fixed_price = true
                     price_decimals = 8
                 } else {
